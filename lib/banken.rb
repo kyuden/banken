@@ -1,37 +1,38 @@
-require "banken/version"
-require "banken/policy_finder"
 require "active_support/concern"
 require "active_support/core_ext/string/inflections"
 require "active_support/core_ext/object/blank"
 require "active_support/core_ext/module/introspection"
-require "active_support/dependencies/autoload"
+require "banken/version"
+require "banken/error"
+require "banken/helper"
+require "banken/policy_finder"
 
 module Banken
   SUFFIX = "Policy"
 
-  class Error < StandardError; end
-  class NotAuthorizedError < Error
-    attr_reader :query, :record, :policy
+  extend ActiveSupport::Concern
 
-    def initialize(options = {})
-      if options.is_a? String
-        message = options
-      else
-        @query  = options[:query]
-        @record = options[:record]
-        @policy = options[:policy]
-
-        message = options.fetch(:message) { "not allowed to #{query} this #{record.inspect}" }
-      end
-
-      super(message)
+  included do
+    helper Helper if respond_to?(:helper)
+    if respond_to?(:helper_method)
+      helper_method :policy
+      helper_method :banken_policy_scope
+      helper_method :banken_user
+    end
+    if respond_to?(:hide_action)
+      hide_action :policy
+      hide_action :policy_scope
+      hide_action :policies
+      hide_action :policy_scopes
+      hide_action :authorize
+      hide_action :verify_authorized
+      hide_action :verify_policy_scoped
+      hide_action :permitted_attributes
+      hide_action :banken_user
+      hide_action :skip_authorization
+      hide_action :skip_policy_scope
     end
   end
-  class AuthorizationNotPerformedError < Error; end
-  class PolicyScopingNotPerformedError < AuthorizationNotPerformedError; end
-  class NotDefinedError < Error; end
-
-  extend ActiveSupport::Concern
 
   class << self
     def authorize(user, record, query)
@@ -60,34 +61,6 @@ module Banken
 
     def policy!(user, record)
       PolicyFinder.new(record).policy!.new(user, record)
-    end
-  end
-
-  module Helper
-    def policy_scope(scope)
-      banken_policy_scope(scope)
-    end
-  end
-
-  included do
-    helper Helper if respond_to?(:helper)
-    if respond_to?(:helper_method)
-      helper_method :policy
-      helper_method :banken_policy_scope
-      helper_method :banken_user
-    end
-    if respond_to?(:hide_action)
-      hide_action :policy
-      hide_action :policy_scope
-      hide_action :policies
-      hide_action :policy_scopes
-      hide_action :authorize
-      hide_action :verify_authorized
-      hide_action :verify_policy_scoped
-      hide_action :permitted_attributes
-      hide_action :banken_user
-      hide_action :skip_authorization
-      hide_action :skip_policy_scope
     end
   end
 
@@ -154,9 +127,9 @@ module Banken
     current_user
   end
 
-private
+  private
 
-  def banken_policy_scope(scope)
-    policy_scopes[scope] ||= Banken.policy_scope!(banken_user, scope)
-  end
+    def banken_policy_scope(scope)
+      policy_scopes[scope] ||= Banken.policy_scope!(banken_user, scope)
+    end
 end
