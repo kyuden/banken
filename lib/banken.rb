@@ -17,17 +17,16 @@ module Banken
       helper_method :banken_user
     end
     if respond_to?(:hide_action)
-      hide_action :policy
       hide_action :policy_scope
-      hide_action :policies
-      hide_action :policy_scopes
-      hide_action :authorize!
-      hide_action :verify_authorized
-      hide_action :verify_policy_scoped
       hide_action :permitted_attributes
+      hide_action :policy
       hide_action :banken_user
       hide_action :skip_authorization
       hide_action :skip_policy_scope
+      hide_action :verify_authorized
+      hide_action :verify_policy_scoped
+      hide_action :policies
+      hide_action :policy_scopes
     end
   end
 
@@ -39,22 +38,6 @@ module Banken
     def policy!(controller, user, record)
       PolicyFinder.new(controller).policy!.new(user, record)
     end
-  end
-
-  def banken_policy_authorized?
-    !!@_banken_policy_authorized
-  end
-
-  def banken_policy_scoped?
-    !!@_banken_policy_scoped
-  end
-
-  def verify_authorized
-    raise AuthorizationNotPerformedError unless banken_policy_authorized?
-  end
-
-  def verify_policy_scoped
-    raise PolicyScopingNotPerformedError unless banken_policy_scoped?
   end
 
   def authorize!(record=nil)
@@ -71,6 +54,24 @@ module Banken
     true
   end
 
+  def policy_scope(scope)
+    @_banken_policy_scoped = true
+    banken_policy_scope(scope)
+  end
+
+  def permitted_attributes(record)
+    name = record.class.to_s.demodulize.underscore
+    params.require(name).permit(policy(record).permitted_attributes)
+  end
+
+  def policy(controller, action, record)
+    policies[action] ||= Banken.policy!(controller, banken_user, record)
+  end
+
+  def banken_user
+    current_user
+  end
+
   def skip_authorization
     @_banken_policy_authorized = true
   end
@@ -79,18 +80,20 @@ module Banken
     @_banken_policy_scoped = true
   end
 
-  def policy_scope(scope)
-    @_banken_policy_scoped = true
-    banken_policy_scope(scope)
+  def verify_authorized
+    raise AuthorizationNotPerformedError unless banken_policy_authorized?
   end
 
-  def policy(controller, action, record)
-    policies[action] ||= Banken.policy!(controller, banken_user, record)
+  def verify_policy_scoped
+    raise PolicyScopingNotPerformedError unless banken_policy_scoped?
   end
 
-  def permitted_attributes(record)
-    name = record.class.to_s.demodulize.underscore
-    params.require(name).permit(policy(record).permitted_attributes)
+  def banken_policy_authorized?
+    !!@_banken_policy_authorized
+  end
+
+  def banken_policy_scoped?
+    !!@_banken_policy_scoped
   end
 
   def policies
@@ -99,10 +102,6 @@ module Banken
 
   def policy_scopes
     @_banken_policy_scopes ||= {}
-  end
-
-  def banken_user
-    current_user
   end
 
   private
