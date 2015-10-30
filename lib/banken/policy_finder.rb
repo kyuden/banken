@@ -1,5 +1,7 @@
 module Banken
   class PolicyFinder
+    SUFFIX = "Policy"
+
     attr_reader :object
 
     def initialize(object)

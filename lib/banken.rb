@@ -8,8 +8,6 @@ require "banken/helper"
 require "banken/policy_finder"
 
 module Banken
-  SUFFIX = "Policy"
-
   extend ActiveSupport::Concern
 
   included do
