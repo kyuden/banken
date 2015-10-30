@@ -4,7 +4,7 @@ module Banken
   class NotAuthorizedError < Error
     attr_reader :controller, :action, :policy
 
-    def initialize(options = {})
+    def initialize(options={})
       if options.is_a? String
         message = options
       else
