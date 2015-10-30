@@ -11,9 +11,11 @@ module Banken
   extend ActiveSupport::Concern
 
   included do
-    helper Helper if respond_to?(:helper)
+    # TODO
+    # helper Helper if respond_to?(:helper)
     if respond_to?(:helper_method)
-      helper_method :banken_policy_scope
+      # TODO
+      # helper_method :banken_policy_scope
       helper_method :banken_user
     end
     if respond_to?(:hide_action)
