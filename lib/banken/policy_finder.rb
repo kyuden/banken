@@ -28,7 +28,7 @@ module Banken
     end
 
     def policy!
-      raise NotDefinedError, "unable to find policy scope of nil" unless controller
+      raise NotDefinedError, "unable to find policy of nil" unless controller
       policy || raise(NotDefinedError, "unable to find policy `#{find}` for `#{controller}`")
     end
 
