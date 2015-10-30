@@ -57,8 +57,8 @@ module Banken
       policy.new(user, record) if policy
     end
 
-    def policy!(user, record)
-      PolicyFinder.new(record).policy!.new(user, record)
+    def policy!(controller, user, record)
+      PolicyFinder.new(controller).policy!.new(user, record)
     end
   end
 
@@ -78,14 +78,15 @@ module Banken
     raise PolicyScopingNotPerformedError unless banken_policy_scoped?
   end
 
-  def authorize(record, action=nil)
-    action ||= params[:action].to_s + "?"
+  def authorize(record=nil)
+    action     = params[:action].to_s + "?"
+    controller = params[:controller].to_s
 
     @_banken_policy_authorized = true
 
-    policy = policy(record)
+    policy = policy(controller, action, record)
     unless policy.public_send(action)
-      raise NotAuthorizedError.new(action: action, record: record, policy: policy)
+      raise NotAuthorizedError.new(controller: controller, action: action, policy: policy)
     end
 
     true
@@ -104,8 +105,8 @@ module Banken
     banken_policy_scope(scope)
   end
 
-  def policy(record)
-    policies[record] ||= Banken.policy!(banken_user, record)
+  def policy(controller, action, record)
+    policies[action] ||= Banken.policy!(controller, banken_user, record)
   end
 
   def permitted_attributes(record)

@@ -4,8 +4,8 @@ module Banken
 
     attr_reader :object
 
-    def initialize(object)
-      @object = object
+    def initialize(controller)
+      @controller = controller
     end
 
     def scope
@@ -28,35 +28,14 @@ module Banken
     end
 
     def policy!
-      raise NotDefinedError, "unable to find policy of nil" if object.nil?
-      policy or raise NotDefinedError, "unable to find policy `#{find}` for `#{object.inspect}`"
+      raise NotDefinedError, "unable to find policy scope of nil" unless @controller
+      policy or raise NotDefinedError, "unable to find policy `#{find}` for `#{@controller}`"
     end
 
   private
 
     def find
-      if object.nil?
-        nil
-      elsif object.respond_to?(:policy_class)
-        object.policy_class
-      elsif object.class.respond_to?(:policy_class)
-        object.class.policy_class
-      else
-        klass = if object.respond_to?(:model_name)
-          object.model_name
-        elsif object.class.respond_to?(:model_name)
-          object.class.model_name
-        elsif object.is_a?(Class)
-          object
-        elsif object.is_a?(Symbol)
-          object.to_s.camelize
-        elsif object.is_a?(Array)
-          object.join('/').camelize
-        else
-          object.class
-        end
-        "#{klass}#{SUFFIX}"
-      end
+      "#{@controller.camelize}#{SUFFIX}"
     end
   end
 end
