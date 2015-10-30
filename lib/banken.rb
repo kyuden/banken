@@ -32,11 +32,6 @@ module Banken
   end
 
   class << self
-    def policy_scope(user, scope)
-      policy_scope = PolicyFinder.new(scope).scope
-      policy_scope.new(user, scope).resolve if policy_scope
-    end
-
     def policy_scope!(user, scope)
       PolicyFinder.new(params[:controller].to_s).scope!.new(user, scope).resolve
     end
