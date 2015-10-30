@@ -1,0 +1,8 @@
+Description:
+    Generates a loyalty for a controller with the given name.
+
+Example:
+    rails generate banken:loyalty users
+
+    This will create:
+        app/policies/users_loyalty.rb

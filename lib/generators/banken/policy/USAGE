@@ -1,8 +1,0 @@
-Description:
-    Generates a policy for a controller with the given name.
-
-Example:
-    rails generate banken:policy users
-
-    This will create:
-        app/policies/users_policy.rb

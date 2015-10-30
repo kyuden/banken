@@ -1,6 +1,6 @@
 module Banken
-  class PolicyFinder
-    SUFFIX = "Policy"
+  class LoyaltyFinder
+    SUFFIX = "Loyalty"
 
     attr_reader :controller
 
@@ -9,12 +9,12 @@ module Banken
     end
 
     def scope
-      policy::Scope if policy
+      loyalty::Scope if loyalty
     rescue NameError
       nil
     end
 
-    def policy
+    def loyalty
       klass = find
       klass = klass.constantize if klass.is_a?(String)
       klass
@@ -23,13 +23,13 @@ module Banken
     end
 
     def scope!
-      raise NotDefinedError, "unable to find policy scope of nil" unless controller
+      raise NotDefinedError, "unable to find loyalty scope of nil" unless controller
       scope || raise(NotDefinedError, "unable to find scope `#{find}::Scope` for `#{controller}`")
     end
 
-    def policy!
-      raise NotDefinedError, "unable to find policy of nil" unless controller
-      policy || raise(NotDefinedError, "unable to find policy `#{find}` for `#{controller}`")
+    def loyalty!
+      raise NotDefinedError, "unable to find loyalty of nil" unless controller
+      loyalty || raise(NotDefinedError, "unable to find loyalty `#{find}` for `#{controller}`")
     end
 
     private

@@ -3,8 +3,8 @@ module Banken
     class InstallGenerator < ::Rails::Generators::Base
       source_root File.expand_path(File.join(File.dirname(__FILE__), 'templates'))
 
-      def copy_application_policy
-        template 'application_policy.rb', 'app/policies/application_policy.rb'
+      def copy_application_loyalty
+        template 'application_loyalty.rb', 'app/policies/application_loyalty.rb'
       end
     end
   end

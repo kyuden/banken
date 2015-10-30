@@ -2,7 +2,7 @@ module Banken
   class Error < StandardError; end
 
   class NotAuthorizedError < Error
-    attr_reader :controller, :action, :policy
+    attr_reader :controller, :action, :loyalty
 
     def initialize(options={})
       if options.is_a? String
@@ -10,9 +10,9 @@ module Banken
       else
         @controller = options[:controller]
         @action     = options[:action]
-        @policy     = options[:policy]
+        @loyalty     = options[:loyalty]
 
-        message = options.fetch(:message) { "not allowed to #{action} of #{controller} by #{policy.inspect}" }
+        message = options.fetch(:message) { "not allowed to #{action} of #{controller} by #{loyalty.inspect}" }
       end
 
       super(message)
@@ -22,5 +22,5 @@ module Banken
   class NotDefinedError < Error; end
   class AuthorizationNotPerformedError < Error; end
 
-  class PolicyScopingNotPerformedError < AuthorizationNotPerformedError; end
+  class LoyaltyScopingNotPerformedError < AuthorizationNotPerformedError; end
 end
