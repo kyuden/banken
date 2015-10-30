@@ -13,7 +13,6 @@ module Banken
   included do
     helper Helper if respond_to?(:helper)
     if respond_to?(:helper_method)
-      helper_method :policy
       helper_method :banken_policy_scope
       helper_method :banken_user
     end
@@ -50,11 +49,6 @@ module Banken
 
     def policy_scope!(user, scope)
       PolicyFinder.new(scope).scope!.new(user, scope).resolve
-    end
-
-    def policy(user, record)
-      policy = PolicyFinder.new(record).policy
-      policy.new(user, record) if policy
     end
 
     def policy!(controller, user, record)
