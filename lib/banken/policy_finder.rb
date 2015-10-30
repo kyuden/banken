@@ -2,7 +2,7 @@ module Banken
   class PolicyFinder
     SUFFIX = "Policy"
 
-    attr_reader :object
+    attr_reader :controller
 
     def initialize(controller)
       @controller = controller
@@ -23,19 +23,19 @@ module Banken
     end
 
     def scope!
-      raise NotDefinedError, "unable to find policy scope of nil" unless @controller
-      scope || raise(NotDefinedError, "unable to find scope `#{find}::Scope` for `#{@controller}`")
+      raise NotDefinedError, "unable to find policy scope of nil" unless controller
+      scope || raise(NotDefinedError, "unable to find scope `#{find}::Scope` for `#{controller}`")
     end
 
     def policy!
-      raise NotDefinedError, "unable to find policy scope of nil" unless @controller
-      policy || raise(NotDefinedError, "unable to find policy `#{find}` for `#{@controller}`")
+      raise NotDefinedError, "unable to find policy scope of nil" unless controller
+      policy || raise(NotDefinedError, "unable to find policy `#{find}` for `#{controller}`")
     end
 
     private
 
       def find
-        "#{@controller.camelize}#{SUFFIX}"
+        "#{controller.camelize}#{SUFFIX}"
       end
   end
 end
