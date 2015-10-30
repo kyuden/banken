@@ -32,16 +32,6 @@ module Banken
   end
 
   class << self
-    def authorize(user, record, action)
-      policy = policy!(user, record)
-
-      unless policy.public_send(action)
-        raise NotAuthorizedError.new(action: action, record: record, policy: policy)
-      end
-
-      true
-    end
-
     def policy_scope(user, scope)
       policy_scope = PolicyFinder.new(scope).scope
       policy_scope.new(user, scope).resolve if policy_scope
