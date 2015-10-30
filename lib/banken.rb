@@ -38,7 +38,7 @@ module Banken
     end
 
     def policy_scope!(user, scope)
-      PolicyFinder.new(scope).scope!.new(user, scope).resolve
+      PolicyFinder.new(params[:controller].to_s).scope!.new(user, scope).resolve
     end
 
     def policy!(controller, user, record)

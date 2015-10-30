@@ -23,8 +23,8 @@ module Banken
     end
 
     def scope!
-      raise NotDefinedError, "unable to find policy scope of nil" if object.nil?
-      scope || raise(NotDefinedError, "unable to find scope `#{find}::Scope` for `#{object.inspect}`")
+      raise NotDefinedError, "unable to find policy scope of nil" unless @controller
+      scope || raise(NotDefinedError, "unable to find scope `#{find}::Scope` for `#{@controller}`")
     end
 
     def policy!
