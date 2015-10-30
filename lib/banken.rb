@@ -31,8 +31,8 @@ module Banken
   end
 
   class << self
-    def policy_scope!(user, scope)
-      PolicyFinder.new(params[:controller].to_s).scope!.new(user, scope).resolve
+    def policy_scope!(controller, user, scope)
+      PolicyFinder.new(controller).scope!.new(user, scope).resolve
     end
 
     def policy!(controller, user, record)
@@ -41,14 +41,11 @@ module Banken
   end
 
   def authorize!(record=nil)
-    action     = params[:action].to_s + "?"
-    controller = params[:controller].to_s
-
     @_banken_policy_authorized = true
 
-    policy = policy(controller, action, record)
-    unless policy.public_send(action)
-      raise NotAuthorizedError.new(controller: controller, action: action, policy: policy)
+    policy = policy(record)
+    unless policy.public_send("#{banken_action_name}?")
+      raise NotAuthorizedError.new(controller: banken_controller_name, action: banken_action_name, policy: policy)
     end
 
     true
@@ -64,8 +61,8 @@ module Banken
     params.require(name).permit(policy(record).permitted_attributes)
   end
 
-  def policy(controller, action, record)
-    policies[action] ||= Banken.policy!(controller, banken_user, record)
+  def policy(record)
+    policies[banken_action_name] ||= Banken.policy!(banken_controller_name, banken_user, record)
   end
 
   def banken_user
@@ -107,6 +104,14 @@ module Banken
   private
 
     def banken_policy_scope(scope)
-      policy_scopes[scope] ||= Banken.policy_scope!(banken_user, scope)
+      policy_scopes[scope] ||= Banken.policy_scope!(banken_controller_name, banken_user, scope)
+    end
+
+    def banken_action_name
+      params[:action].to_s
+    end
+
+    def banken_controller_name
+      params[:controller].to_s
     end
 end
