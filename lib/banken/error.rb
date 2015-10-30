@@ -2,17 +2,17 @@ module Banken
   class Error < StandardError; end
 
   class NotAuthorizedError < Error
-    attr_reader :query, :record, :policy
+    attr_reader :action, :record, :policy
 
     def initialize(options = {})
       if options.is_a? String
         message = options
       else
-        @query  = options[:query]
+        @action  = options[:action]
         @record = options[:record]
         @policy = options[:policy]
 
-        message = options.fetch(:message) { "not allowed to #{query} this #{record.inspect}" }
+        message = options.fetch(:message) { "not allowed to #{action} this #{record.inspect}" }
       end
 
       super(message)

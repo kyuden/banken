@@ -35,11 +35,11 @@ module Banken
   end
 
   class << self
-    def authorize(user, record, query)
+    def authorize(user, record, action)
       policy = policy!(user, record)
 
-      unless policy.public_send(query)
-        raise NotAuthorizedError.new(query: query, record: record, policy: policy)
+      unless policy.public_send(action)
+        raise NotAuthorizedError.new(action: action, record: record, policy: policy)
       end
 
       true
@@ -80,14 +80,14 @@ module Banken
     raise PolicyScopingNotPerformedError unless banken_policy_scoped?
   end
 
-  def authorize(record, query=nil)
-    query ||= params[:action].to_s + "?"
+  def authorize(record, action=nil)
+    action ||= params[:action].to_s + "?"
 
     @_banken_policy_authorized = true
 
     policy = policy(record)
-    unless policy.public_send(query)
-      raise NotAuthorizedError.new(query: query, record: record, policy: policy)
+    unless policy.public_send(action)
+      raise NotAuthorizedError.new(action: action, record: record, policy: policy)
     end
 
     true
