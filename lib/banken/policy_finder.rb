@@ -32,10 +32,10 @@ module Banken
       policy || raise(NotDefinedError, "unable to find policy `#{find}` for `#{@controller}`")
     end
 
-  private
+    private
 
-    def find
-      "#{@controller.camelize}#{SUFFIX}"
-    end
+      def find
+        "#{@controller.camelize}#{SUFFIX}"
+      end
   end
 end
