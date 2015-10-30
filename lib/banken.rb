@@ -22,7 +22,7 @@ module Banken
       hide_action :policy_scope
       hide_action :policies
       hide_action :policy_scopes
-      hide_action :authorize
+      hide_action :authorize!
       hide_action :verify_authorized
       hide_action :verify_policy_scoped
       hide_action :permitted_attributes
@@ -78,7 +78,7 @@ module Banken
     raise PolicyScopingNotPerformedError unless banken_policy_scoped?
   end
 
-  def authorize(record=nil)
+  def authorize!(record=nil)
     action     = params[:action].to_s + "?"
     controller = params[:controller].to_s
 
