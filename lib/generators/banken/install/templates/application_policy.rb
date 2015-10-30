@@ -35,7 +35,7 @@ class ApplicationPolicy
   end
 
   def scope
-    Banken.policy_scope!(user, record.class)
+    Scope.new(user, record.class).resolve
   end
 
   class Scope
