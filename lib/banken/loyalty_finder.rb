@@ -5,7 +5,7 @@ module Banken
     attr_reader :controller
 
     def initialize(controller)
-      @controller = controller
+      @controller = controller.to_s
     end
 
     def loyalty

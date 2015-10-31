@@ -44,7 +44,7 @@ module Banken
   end
 
   def loyalty(controller_name, record=nil)
-    loyalties[controller_name.to_s] ||= Banken.loyalty!(controller_name.to_s, banken_user, record)
+    loyalties[controller_name.to_s] ||= Banken.loyalty!(controller_name, banken_user, record)
   end
 
   def banken_user
@@ -70,10 +70,10 @@ module Banken
   private
 
     def banken_action_name
-      params[:action].to_s
+      params[:action]
     end
 
     def banken_controller_name
-      params[:controller].to_s
+      params[:controller]
     end
 end
