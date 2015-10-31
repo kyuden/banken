@@ -1,0 +1,1 @@
+class Article; end
