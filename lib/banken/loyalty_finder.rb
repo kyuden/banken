@@ -9,21 +9,19 @@ module Banken
     end
 
     def loyalty
-      klass = find
-      klass = klass.constantize if klass.is_a?(String)
-      klass
+      loyalty_name.constantize
     rescue NameError
       nil
     end
 
     def loyalty!
       raise NotDefinedError, "unable to find loyalty of nil" unless controller
-      loyalty || raise(NotDefinedError, "unable to find loyalty `#{find}` for `#{controller}`")
+      loyalty || raise(NotDefinedError, "unable to find loyalty `#{loyalty_name}` for `#{controller}`")
     end
 
     private
 
-      def find
+      def loyalty_name
         "#{controller.camelize}#{SUFFIX}"
       end
   end
