@@ -1,6 +1,8 @@
 # Banken
 
 [![Build Status](https://secure.travis-ci.org/kyuden/banken.png?branch=master)](https://travis-ci.org/kyuden/banken)
+[![Code Climate](https://codeclimate.com/github/kyuden/banken/badges/gpa.svg)](https://codeclimate.com/github/kyuden/banken)
+[![Gem Version](https://badge.fury.io/rb/banken.svg)](https://badge.fury.io/rb/banken)
 
 Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/banken`. To experiment with that code, run `bin/console` for an interactive prompt.
 
