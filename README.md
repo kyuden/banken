@@ -1,6 +1,6 @@
 # Banken
 
-[![Build Status](https://secure.travis-ci.org/kyuden/banken.png?branch=master)](https://travis-ci.org/kyuden/banken)
+[![Build Status](https://img.shields.io/travis/kyuden/banken/master.svg)](https://travis-ci.org/kyuden/banken)
 [![Code Climate](https://codeclimate.com/github/kyuden/banken/badges/gpa.svg)](https://codeclimate.com/github/kyuden/banken)
 [![Gem Version](https://badge.fury.io/rb/banken.svg)](https://badge.fury.io/rb/banken)
 
