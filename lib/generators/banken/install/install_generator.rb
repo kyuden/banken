@@ -4,7 +4,7 @@ module Banken
       source_root File.expand_path(File.join(File.dirname(__FILE__), 'templates'))
 
       def copy_application_loyalty
-        template 'application_loyalty.rb', 'app/policies/application_loyalty.rb'
+        template 'application_loyalty.rb', 'app/loyalties/application_loyalty.rb'
       end
     end
   end

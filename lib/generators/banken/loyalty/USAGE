@@ -5,4 +5,4 @@ Example:
     rails generate banken:loyalty users
 
     This will create:
-        app/policies/users_loyalty.rb
+        app/loyalties/users_loyalty.rb

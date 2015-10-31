@@ -20,7 +20,7 @@ module Banken
       hide_action :banken_user
       hide_action :skip_authorization
       hide_action :verify_authorized
-      hide_action :policies
+      hide_action :loyalties
     end
   end
 
@@ -47,7 +47,7 @@ module Banken
   end
 
   def loyalty(controller_name, record=nil)
-    policies[controller_name.to_s] ||= Banken.loyalty!(controller_name.to_s, banken_user, record)
+    loyalties[controller_name.to_s] ||= Banken.loyalty!(controller_name.to_s, banken_user, record)
   end
 
   def banken_user
@@ -66,8 +66,8 @@ module Banken
     !!@_banken_loyalty_authorized
   end
 
-  def policies
-    @_banken_policies ||= {}
+  def loyalties
+    @_banken_loyalties ||= {}
   end
 
   private
