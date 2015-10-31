@@ -10,7 +10,7 @@ module Banken
       else
         @controller = options[:controller]
         @action     = options[:action]
-        @loyalty     = options[:loyalty]
+        @loyalty    = options[:loyalty]
 
         message = options.fetch(:message) { "not allowed to #{action} of #{controller} by #{loyalty.inspect}" }
       end
