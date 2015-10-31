@@ -22,7 +22,7 @@ module Banken
   end
 
   class << self
-    def loyalty!(controller, user, record)
+    def loyalty!(controller, user, record=nil)
       LoyaltyFinder.new(controller).loyalty!.new(user, record)
     end
   end
