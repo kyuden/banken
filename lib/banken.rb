@@ -4,18 +4,16 @@ require "active_support/core_ext/object/blank"
 require "active_support/core_ext/module/introspection"
 require "banken/version"
 require "banken/error"
-require "banken/helper"
 require "banken/loyalty_finder"
 
 module Banken
   extend ActiveSupport::Concern
 
   included do
-    # TODO
-    # helper Helper if respond_to?(:helper)
+    helper Helper if respond_to?(:helper)
     if respond_to?(:helper_method)
-      # TODO
-      # helper_method :banken_loyalty_scope
+      helper_method :loyalty
+      helper_method :banken_loyalty_scope
       helper_method :banken_user
     end
     if respond_to?(:hide_action)
@@ -45,7 +43,7 @@ module Banken
   def authorize!(record=nil)
     @_banken_loyalty_authorized = true
 
-    loyalty = loyalty(record)
+    loyalty = loyalty(banken_controller_name, record)
     unless loyalty.public_send("#{banken_action_name}?")
       raise NotAuthorizedError.new(controller: banken_controller_name, action: banken_action_name, loyalty: loyalty)
     end
@@ -53,18 +51,24 @@ module Banken
     true
   end
 
+  module Helper
+    def loyalty_scope(controller_name, scope)
+      banken_loyalty_scope(controller_name.to_s, scope)
+    end
+  end
+
   def loyalty_scope(scope)
     @_banken_loyalty_scoped = true
-    banken_loyalty_scope(scope)
+    banken_loyalty_scope(banken_controller_name, scope)
   end
 
   def permitted_attributes(record)
     name = record.class.to_s.demodulize.underscore
-    params.require(name).permit(loyalty(record).permitted_attributes)
+    params.require(name).permit(loyalty(banken_controller_name, record).permitted_attributes)
   end
 
-  def loyalty(record)
-    policies[banken_action_name] ||= Banken.loyalty!(banken_controller_name, banken_user, record)
+  def loyalty(controller_name, record=nil)
+    policies[controller_name.to_s] ||= Banken.loyalty!(controller_name.to_s, banken_user, record)
   end
 
   def banken_user
@@ -105,8 +109,8 @@ module Banken
 
   private
 
-    def banken_loyalty_scope(scope)
-      loyalty_scopes[scope] ||= Banken.loyalty_scope!(banken_controller_name, banken_user, scope)
+    def banken_loyalty_scope(controller_name, scope)
+      loyalty_scopes[scope] ||= Banken.loyalty_scope!(controller_name, banken_user, scope)
     end
 
     def banken_action_name
