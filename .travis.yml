@@ -5,6 +5,3 @@ rvm:
   - 2.1.5
   - 2.2.3
   - rbx-2
-env:
-  - RSPEC_VERSION="<2.99"
-  - RSPEC_VERSION="~>3.0
