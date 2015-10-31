@@ -11,7 +11,7 @@ class ApplicationLoyalty
   end
 
   def show?
-    scope.where(:id => record.id).exists?
+    false
   end
 
   def create?
@@ -32,22 +32,5 @@ class ApplicationLoyalty
 
   def destroy?
     false
-  end
-
-  def scope
-    Scope.new(user, record.class).resolve
-  end
-
-  class Scope
-    attr_reader :user, :scope
-
-    def initialize(user, scope)
-      @user = user
-      @scope = scope
-    end
-
-    def resolve
-      scope
-    end
   end
 end
