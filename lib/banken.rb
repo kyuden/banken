@@ -10,18 +10,15 @@ module Banken
   extend ActiveSupport::Concern
 
   included do
-    if respond_to?(:helper_method)
-      helper_method :loyalty
-      helper_method :banken_user
-    end
-    if respond_to?(:hide_action)
-      hide_action :permitted_attributes
-      hide_action :loyalty
-      hide_action :banken_user
-      hide_action :skip_authorization
-      hide_action :verify_authorized
-      hide_action :loyalties
-    end
+    helper_method :loyalty
+    helper_method :banken_user
+
+    hide_action :permitted_attributes
+    hide_action :loyalty
+    hide_action :banken_user
+    hide_action :skip_authorization
+    hide_action :verify_authorized
+    hide_action :loyalties
   end
 
   class << self
