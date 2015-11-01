@@ -284,7 +284,7 @@ end
 en:
  banken:
    default: 'You cannot perform this action.'
-   post_loyalty:
+   posts_loyalty:
      update?: 'You cannot edit this post!'
      create?: 'You cannot create posts!'
 ```
