@@ -36,7 +36,7 @@ module Banken
 
     loyalty = loyalty(record)
     unless loyalty.public_send("#{banken_action_name}?")
-      raise NotAuthorizedError.new(controller: banken_controller_name, action: banken_action_name, loyalty: loyalty)
+      raise NotAuthorizedError.new(controller: banken_controller_name, query: banken_action_name, loyalty: loyalty)
     end
 
     true

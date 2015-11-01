@@ -2,17 +2,17 @@ module Banken
   class Error < StandardError; end
 
   class NotAuthorizedError < Error
-    attr_reader :controller, :action, :loyalty
+    attr_reader :controller, :query, :loyalty
 
     def initialize(options={})
       if options.is_a? String
         message = options
       else
         @controller = options[:controller]
-        @action     = options[:action]
+        @query      = options[:query]
         @loyalty    = options[:loyalty]
 
-        message = options.fetch(:message) { "not allowed to #{action} of #{controller} by #{loyalty.inspect}" }
+        message = options.fetch(:message) { "not allowed to #{query} of #{controller} by #{loyalty.inspect}" }
       end
 
       super(message)
