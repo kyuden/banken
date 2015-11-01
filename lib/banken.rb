@@ -35,8 +35,8 @@ module Banken
     @_banken_loyalty_authorized = true
 
     loyalty = loyalty(record)
-    unless loyalty.public_send("#{banken_action_name}?")
-      raise NotAuthorizedError.new(controller: banken_controller_name, query: banken_action_name, loyalty: loyalty)
+    unless loyalty.public_send(banken_query_name)
+      raise NotAuthorizedError.new(controller: banken_controller_name, query: banken_query_name, loyalty: loyalty)
     end
 
     true
@@ -80,5 +80,9 @@ module Banken
 
     def banken_controller_name
       params[:controller]
+    end
+
+    def banken_query_name
+      "#{banken_action_name}?"
     end
 end
