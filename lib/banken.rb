@@ -26,15 +26,15 @@ module Banken
   end
 
   class << self
-    def loyalty!(controller, user, record=nil)
-      LoyaltyFinder.new(controller).loyalty!.new(user, record)
+    def loyalty!(controller_name, user, record=nil)
+      LoyaltyFinder.new(controller_name).loyalty!.new(user, record)
     end
   end
 
   def authorize!(record=nil)
     @_banken_loyalty_authorized = true
 
-    loyalty = loyalty(banken_controller_name, record)
+    loyalty = loyalty(record)
     unless loyalty.public_send("#{banken_action_name}?")
       raise NotAuthorizedError.new(controller: banken_controller_name, action: banken_action_name, loyalty: loyalty)
     end
@@ -44,10 +44,11 @@ module Banken
 
   def permitted_attributes(record)
     name = record.class.to_s.demodulize.underscore
-    params.require(name).permit(loyalty(banken_controller_name, record).permitted_attributes)
+    params.require(name).permit(loyalty(record).permitted_attributes)
   end
 
-  def loyalty(controller_name, record=nil)
+  def loyalty(record=nil, controller_name=nil)
+    controller_name = banken_controller_name unless controller_name
     loyalties[controller_name.to_s] ||= Banken.loyalty!(controller_name, banken_user, record)
   end
 

@@ -109,7 +109,7 @@ describe Banken do
 
   describe "#loyalty" do
     it "returns an instantiated loyalty" do
-      loyalty = posts_controller.loyalty('posts', post)
+      loyalty = posts_controller.loyalty(post, 'posts')
       expect(loyalty.user).to eq user
       expect(loyalty.record).to eq post
     end
@@ -122,7 +122,7 @@ describe Banken do
       new_loyalty = OpenStruct.new
       posts_controller.loyalties["posts"] = new_loyalty
 
-      expect(posts_controller.loyalty("posts", post)).to eq new_loyalty
+      expect(posts_controller.loyalty(post, "posts")).to eq new_loyalty
     end
   end
 
