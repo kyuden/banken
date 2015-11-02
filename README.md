@@ -34,7 +34,7 @@ rails g banken:install
 After generating your application loyalty, restart the Rails server so that Rails
 can pick up any classes in the new `app/loyalties/` directory.
 
-## Policies
+## Loyalties
 
 Banken is focused around the notion of loyalty classes. We suggest that you put
 these classes in `app/loyalties`. This is a simple example that allows updating
@@ -173,7 +173,7 @@ class PostsController < ApplicationController
   def show
     record = Record.find_by(attribute: "value")
     if record.present?
-      authorize record
+      authorize! record
     else
       skip_authorization
     end
