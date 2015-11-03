@@ -4,11 +4,11 @@
 [![Code Climate](https://codeclimate.com/github/kyuden/banken/badges/gpa.svg)](https://codeclimate.com/github/kyuden/banken)
 [![Gem Version](https://badge.fury.io/rb/banken.svg)](https://badge.fury.io/rb/banken)
 
-========
 Banken provides a set of helpers which guide you in leveraging regular Ruby
 classes and object oriented design patterns to build a simple, robust and
 scaleable authorization system.
 
+========
 ## Installation
 
 ``` ruby
