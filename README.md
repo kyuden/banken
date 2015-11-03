@@ -1,9 +1,10 @@
-<p><img width="350"src="https://raw.github.com/wiki/kyuden/banken/images/banken.png"></p>
-=========
+<img width="350"src="https://raw.github.com/wiki/kyuden/banken/images/banken.png">
+
 [![Build Status](https://img.shields.io/travis/kyuden/banken/master.svg)](https://travis-ci.org/kyuden/banken)
 [![Code Climate](https://codeclimate.com/github/kyuden/banken/badges/gpa.svg)](https://codeclimate.com/github/kyuden/banken)
 [![Gem Version](https://badge.fury.io/rb/banken.svg)](https://badge.fury.io/rb/banken)
 
+========
 Banken provides a set of helpers which guide you in leveraging regular Ruby
 classes and object oriented design patterns to build a simple, robust and
 scaleable authorization system.
