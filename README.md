@@ -4,9 +4,9 @@
 [![Code Climate](https://codeclimate.com/github/kyuden/banken/badges/gpa.svg)](https://codeclimate.com/github/kyuden/banken)
 [![Gem Version](https://badge.fury.io/rb/banken.svg)](https://badge.fury.io/rb/banken)
 
-Banken provides a set of helpers which guide you in leveraging regular Ruby
-classes and object oriented design patterns to build a simple, robust and
-scaleable authorization system.
+Simple and lightweight authorization library for Rails inspired by Pandit.
+Banken provides a set of helpers which restricts what resources
+a given user is allowed to access.
 
 ========
 ## Installation
