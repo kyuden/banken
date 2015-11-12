@@ -8,6 +8,10 @@ Simple and lightweight authorization library for Rails inspired by Pandit.
 Banken provides a set of helpers which restricts what resources
 a given user is allowed to access.
 
+In first, Look this tutorial:
+ - [Tutorial](https://github.com/kyuden/banken/wiki/Tutorial)
+ - [Tutorial (Japanese)](https://github.com/kyuden/banken/wiki/Tutorial-(japanese))
+
 ========
 ## Installation
 
