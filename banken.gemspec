@@ -9,8 +9,8 @@ Gem::Specification.new do |spec|
   spec.authors       = ["kyuden"]
   spec.email         = ["msmsms.um@gmail.com"]
 
-  spec.summary       = %q{OO authorization for Rails.}
-  spec.description   = %q{Object oriented authorization like pundit for Rails applications.}
+  spec.summary       = %q{Simple and lightweight authorization solution for Rails.}
+  spec.description   = %q{Banken provides a set of helpers which restricts what resources a given user is allowed to access.}
   spec.homepage      = "https://github.com/kyuden/banken"
   spec.license       = "MIT"
 
