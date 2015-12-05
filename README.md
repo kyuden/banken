@@ -4,7 +4,7 @@
 [![Code Climate](https://codeclimate.com/github/kyuden/banken/badges/gpa.svg)](https://codeclimate.com/github/kyuden/banken)
 [![Gem Version](https://badge.fury.io/rb/banken.svg)](https://badge.fury.io/rb/banken)
 
-Simple and lightweight authorization library for Rails inspired by Pandit.
+Simple and lightweight authorization library for Rails inspired by Pundit.
 Banken provides a set of helpers which restricts what resources
 a given user is allowed to access.
 
@@ -13,6 +13,11 @@ In first, Look this tutorial:
  - [Tutorial (Japanese)](https://github.com/kyuden/banken/wiki/Tutorial-(japanese))
 
 ========
+## What's the difference between Banken and Pundit?
+ - [The difference between Banken and Pundit](https://github.com/kyuden/banken/wiki/The-difference-between-Banken-and-Pundit)
+ - [The difference between Banken and Pundit (Japanese)](https://github.com/kyuden/banken/wiki/The-difference-between-Banken-and-Pundit-(Japanese))
+
+ 
 ## Installation
 
 ``` ruby
