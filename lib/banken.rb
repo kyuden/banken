@@ -49,7 +49,7 @@ module Banken
 
   def loyalty(record=nil, controller_name=nil)
     controller_name = banken_controller_name unless controller_name
-    loyalties[controller_name.to_s] ||= Banken.loyalty!(controller_name, banken_user, record)
+    loyalties[record] ||= Banken.loyalty!(controller_name, banken_user, record)
   end
 
   def banken_user
