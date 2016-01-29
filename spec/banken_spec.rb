@@ -69,12 +69,6 @@ describe Banken do
       it "infers the loyalty name and authorizes based on it" do
         expect(posts_controller.authorize!(post)).to be true
       end
-
-      it "caches the loyalty" do
-        expect(posts_controller.loyalties[post]).to be_nil
-        posts_controller.authorize!(post)
-        expect(posts_controller.loyalties[post]).not_to be_nil
-      end
     end
 
     context 'with action returning false' do
@@ -125,13 +119,6 @@ describe Banken do
 
     it "throws an exception if the given loyalty can't be found" do
       expect { posts_controller.loyalty('articles', article) }.to raise_error(Banken::NotDefinedError)
-    end
-
-    it "allows loyalty to be injected" do
-      new_loyalty = OpenStruct.new
-      posts_controller.loyalties[post] = new_loyalty
-
-      expect(posts_controller.loyalty(post, "posts")).to eq new_loyalty
     end
   end
 
