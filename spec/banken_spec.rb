@@ -2,7 +2,8 @@ require "spec_helper"
 
 describe Banken do
   let(:user) { double }
-  let(:post) { Post.new(user) }
+  let(:post) { Post.new(user, 1) }
+  let(:post2) { Post.new(user, 2) }
   let(:comment) { Comment.new }
   let(:article) { Article.new }
   let(:posts_controller) { PostsController.new(user, { :action => 'update', :controller => 'posts' }) }
@@ -70,9 +71,9 @@ describe Banken do
       end
 
       it "caches the loyalty" do
-        expect(posts_controller.loyalties['posts']).to be_nil
+        expect(posts_controller.loyalties[post]).to be_nil
         posts_controller.authorize!(post)
-        expect(posts_controller.loyalties['posts']).not_to be_nil
+        expect(posts_controller.loyalties[post]).not_to be_nil
       end
     end
 
@@ -114,13 +115,21 @@ describe Banken do
       expect(loyalty.record).to eq post
     end
 
+    it "returns an different loyalty each record" do
+      loyalty = posts_controller.loyalty(post, 'posts')
+      loyalty2 = posts_controller.loyalty(post2, 'posts')
+
+      expect(loyalty).not_to eq loyalty2
+    end
+
+
     it "throws an exception if the given loyalty can't be found" do
       expect { posts_controller.loyalty('articles', article) }.to raise_error(Banken::NotDefinedError)
     end
 
     it "allows loyalty to be injected" do
       new_loyalty = OpenStruct.new
-      posts_controller.loyalties["posts"] = new_loyalty
+      posts_controller.loyalties[post] = new_loyalty
 
       expect(posts_controller.loyalty(post, "posts")).to eq new_loyalty
     end
