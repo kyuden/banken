@@ -21,7 +21,6 @@ module Banken
       hide_action :banken_user
       hide_action :skip_authorization
       hide_action :verify_authorized
-      hide_action :loyalties
     end
   end
 
@@ -49,7 +48,7 @@ module Banken
 
   def loyalty(record=nil, controller_name=nil)
     controller_name = banken_controller_name unless controller_name
-    loyalties[record] ||= Banken.loyalty!(controller_name, banken_user, record)
+    Banken.loyalty!(controller_name, banken_user, record)
   end
 
   def banken_user
@@ -66,10 +65,6 @@ module Banken
 
   def banken_loyalty_authorized?
     !!@_banken_loyalty_authorized
-  end
-
-  def loyalties
-    @_banken_loyalties ||= {}
   end
 
   private
