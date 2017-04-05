@@ -1,4 +1,4 @@
-<img width="350"src="https://raw.github.com/wiki/kyuden/banken/images/banken.png">
+<img width="350" src="https://raw.github.com/wiki/kyuden/banken/images/banken.png">
 
 [![Build Status](https://img.shields.io/travis/kyuden/banken/master.svg)](https://travis-ci.org/kyuden/banken)
 [![Code Climate](https://codeclimate.com/github/kyuden/banken/badges/gpa.svg)](https://codeclimate.com/github/kyuden/banken)
