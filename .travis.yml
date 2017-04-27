@@ -2,5 +2,6 @@ language: ruby
 sudo: false
 script: "bundle exec rake"
 rvm:
-  - 2.2.3
-  - 2.3.0
+  - 2.2.6
+  - 2.3.3
+  - 2.4.1
