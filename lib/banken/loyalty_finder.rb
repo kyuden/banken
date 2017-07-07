@@ -15,7 +15,6 @@ module Banken
     end
 
     def loyalty!
-      raise NotDefinedError, "unable to find loyalty of nil" unless controller
       loyalty || raise(NotDefinedError, "unable to find loyalty `#{loyalty_name}` for `#{controller}`")
     end
 
