@@ -7,6 +7,7 @@ describe Banken do
   let(:comment) { Comment.new }
   let(:article) { Article.new }
   let(:posts_controller) { PostsController.new(user, { :action => 'update', :controller => 'posts' }) }
+  let(:users_controller) { UsersController.new(user, { :action => 'index', :controller => 'users' }) }
 
   describe ".loyalty!" do
     it "returns an instantiated loyalty given a controller name" do
@@ -32,6 +33,16 @@ describe Banken do
 
     it "throws an exception if the given loyalty can't be found" do
       expect { Banken.loyalty!('articles', user, article) }.to raise_error(Banken::NotDefinedError)
+    end
+  end
+
+  describe ".def_banken_query_method_for" do
+    it "defines banken query method to the loyalty class with the same name as the Controller" do
+      UsersController.def_banken_query_method_for(:index) { true }
+      loyalty = Banken.loyalty!('users', user)
+      expect(loyalty.class.name).to eq 'UsersLoyalty'
+      expect(loyalty.class.superclass.name).to eq 'ApplicationLoyalty'
+      expect(users_controller.authorize!).to be true
     end
   end
 
