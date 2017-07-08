@@ -5,6 +5,7 @@ require "active_support/core_ext/module/introspection"
 require "banken/version"
 require "banken/error"
 require "banken/loyalty_finder"
+require "banken/loyalty_factory"
 
 module Banken
   extend ActiveSupport::Concern
@@ -27,6 +28,26 @@ module Banken
   class << self
     def loyalty!(controller_name, user, record=nil)
       LoyaltyFinder.new(controller_name).loyalty!.new(user, record)
+    end
+  end
+
+  class_methods do
+    def def_banken_query_method_for(action_name, &block)
+      banken_loyalty.class_eval do
+        define_method("#{action_name}?", &block)
+      end
+    end
+
+    private
+
+    def banken_loyalty
+      LoyaltyFinder.new(banken_controller_name).loyalty!
+    rescue NotDefinedError
+      LoyaltyFactory.new(self).create
+    end
+
+    def banken_controller_name
+      controller_path
     end
   end
 
