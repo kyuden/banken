@@ -17,7 +17,7 @@ In first, Look this tutorial:
  - [The difference between Banken and Pundit](https://github.com/kyuden/banken/wiki/The-difference-between-Banken-and-Pundit)
  - [The difference between Banken and Pundit (Japanese)](https://github.com/kyuden/banken/wiki/The-difference-between-Banken-and-Pundit-(Japanese))
 
- 
+
 ## Installation
 
 ``` ruby
@@ -406,6 +406,22 @@ class PostsController < ApplicationController
     else
       render :edit
     end
+  end
+end
+```
+
+## Directly define query methods to the Controller
+
+Optionally, You can directly define query methods by `def_banken_query_method_for` to the Controller without creating a loyalty class:
+
+```ruby
+class PostsController < ApplicationController
+  def admin_list
+    authorize!
+  end
+
+  def_banken_query_method_for(:admin_list) do
+    user.admin?
   end
 end
 ```
