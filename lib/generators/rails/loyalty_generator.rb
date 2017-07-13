@@ -1,7 +1,8 @@
-module Banken
+module Rails
   module Generators
-    class LoyaltyGenerator < ::Rails::Generators::NamedBase
-      source_root File.expand_path(File.join(File.dirname(__FILE__), 'templates'))
+    class LoyaltyGenerator < NamedBase
+      source_root File.expand_path('templates', __dir__)
+      check_class_collision suffix: "Loyalty"
 
       def create_loyalty
         template 'loyalty.rb', File.join('app/loyalties', class_path, "#{file_name}_loyalty.rb")
