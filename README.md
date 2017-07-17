@@ -17,7 +17,7 @@ In first, Look this tutorial:
  - [The difference between Banken and Pundit](https://github.com/kyuden/banken/wiki/The-difference-between-Banken-and-Pundit)
  - [The difference between Banken and Pundit (Japanese)](https://github.com/kyuden/banken/wiki/The-difference-between-Banken-and-Pundit-(Japanese))
 
- 
+
 ## Installation
 
 ``` ruby
@@ -215,7 +215,7 @@ really have to.
 Use the supplied generator to generate loyalties:
 
 ``` sh
-rails g banken:loyalty posts
+rails g loyalty posts
 ```
 
 ## Closed systems
