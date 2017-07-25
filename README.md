@@ -17,7 +17,7 @@ In first, Look this tutorial:
  - [The difference between Banken and Pundit](https://github.com/kyuden/banken/wiki/The-difference-between-Banken-and-Pundit)
  - [The difference between Banken and Pundit (Japanese)](https://github.com/kyuden/banken/wiki/The-difference-between-Banken-and-Pundit-(Japanese))
 
- 
+
 ## Installation
 
 ``` ruby
@@ -277,26 +277,26 @@ that.
 ```ruby
 # app/controllers/application_controller.rb
 class ApplicationController < ActionController::Base
- rescue_from Banken::NotAuthorizedError, with: :user_not_authorized
+  rescue_from Banken::NotAuthorizedError, with: :user_not_authorized
 
- private
+  private
 
- def user_not_authorized(exception)
-   loyalty_name = exception.loyalty.class.to_s.underscore
+  def user_not_authorized(exception)
+    loyalty_name = exception.loyalty.class.to_s.underscore
 
-   flash[:error] = t "#{loyalty_name}.#{exception.query}", scope: "banken", default: :default
-   redirect_to(request.referrer || root_path)
- end
+    flash[:error] = t "#{loyalty_name}.#{exception.query}", scope: "banken", default: :default
+    redirect_to(request.referrer || root_path)
+  end
 end
 ```
 
 ```yaml
 en:
- banken:
-   default: 'You cannot perform this action.'
-   posts_loyalty:
-     update?: 'You cannot edit this post!'
-     create?: 'You cannot create posts!'
+  banken:
+    default: 'You cannot perform this action.'
+    posts_loyalty:
+      update?: 'You cannot edit this post!'
+      create?: 'You cannot create posts!'
 ```
 
 Of course, this is just an example. Banken is agnostic as to how you implement
