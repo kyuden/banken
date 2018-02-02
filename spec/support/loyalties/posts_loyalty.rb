@@ -1,3 +1,5 @@
+require_relative 'application_loyalty'
+
 class PostsLoyalty < ApplicationLoyalty
   def update?
     record.user == user
