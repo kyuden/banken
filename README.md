@@ -157,6 +157,16 @@ conditionally showing links or buttons in the view:
 <% end %>
 ```
 
+If you are using namespace in your controller and policy,
+you can access the policy passing string like 'admin/posts' as a second argument.
+Below calls Admin::PostsLoyalty.
+
+``` erb
+<% if loyalty(@post, 'admin/posts').update? %>
+  <%= link_to "Edit post", edit_post_path(@post) %>
+<% end %>
+```
+
 ## Ensuring loyalties are used
 
 Banken adds a method called `verify_authorized` to your controllers. This
