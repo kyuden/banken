@@ -1,6 +1,6 @@
 module Banken
   class LoyaltyFinder
-    SUFFIX = "Loyalty"
+    SUFFIX = 'Loyalty'.freeze
 
     attr_reader :controller_name
 
@@ -20,8 +20,8 @@ module Banken
 
     private
 
-      def loyalty_name
-        "#{controller_name.camelize}#{SUFFIX}"
-      end
+    def loyalty_name
+      "#{controller_name.camelize}#{SUFFIX}"
+    end
   end
 end

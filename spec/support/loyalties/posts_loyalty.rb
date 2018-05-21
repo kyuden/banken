@@ -15,7 +15,7 @@ class PostsLoyalty < ApplicationLoyalty
 
   def permitted_attributes
     if record.user == user
-      [:title, :votes]
+      %i[title votes]
     else
       [:votes]
     end
