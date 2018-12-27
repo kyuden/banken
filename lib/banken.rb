@@ -1,10 +1,10 @@
-require "active_support/concern"
-require "active_support/core_ext/string/inflections"
-require "active_support/core_ext/object/blank"
-require "active_support/core_ext/module/introspection"
-require "banken/version"
-require "banken/error"
-require "banken/loyalty_finder"
+require 'active_support/concern'
+require 'active_support/core_ext/string/inflections'
+require 'active_support/core_ext/object/blank'
+require 'active_support/core_ext/module/introspection'
+require 'banken/version'
+require 'banken/error'
+require 'banken/loyalty_finder'
 
 module Banken
   extend ActiveSupport::Concern
@@ -25,12 +25,17 @@ module Banken
   end
 
   class << self
-    def loyalty!(controller_name, user, record=nil)
+    def loyalty!(controller_name, user, record = nil)
       LoyaltyFinder.new(controller_name).loyalty!.new(user, record)
     end
   end
 
-  def authorize!(record=nil)
+  def authorize(record = nil)
+    @_banken_loyalty_authorized = true
+    loyalty(record).public_send(banken_query_name)
+  end
+
+  def authorize!(record = nil)
     @_banken_loyalty_authorized = true
 
     loyalty = loyalty(record)
@@ -46,8 +51,8 @@ module Banken
     params.require(name).permit(loyalty(record).permitted_attributes)
   end
 
-  def loyalty(record=nil, controller_name=nil)
-    controller_name = banken_controller_name unless controller_name
+  def loyalty(record = nil, controller_name = nil)
+    controller_name ||= banken_controller_name
     Banken.loyalty!(controller_name, banken_user, record)
   end
 
@@ -69,15 +74,15 @@ module Banken
 
   private
 
-    def banken_action_name
-      params[:action]
-    end
+  def banken_action_name
+    params[:action]
+  end
 
-    def banken_controller_name
-      params[:controller]
-    end
+  def banken_controller_name
+    params[:controller]
+  end
 
-    def banken_query_name
-      "#{banken_action_name}?"
-    end
+  def banken_query_name
+    "#{banken_action_name}?"
+  end
 end
