@@ -31,7 +31,7 @@ module Banken
   end
 
   def authorize!(record=nil)
-    @_banken_loyalty_authorized = true
+    @_banken_authorization_performed = true
 
     loyalty = loyalty(record)
     unless loyalty.public_send(banken_query_name)
@@ -56,15 +56,15 @@ module Banken
   end
 
   def skip_authorization
-    @_banken_loyalty_authorized = true
+    @_banken_authorization_performed = true
   end
 
   def verify_authorized
-    raise AuthorizationNotPerformedError unless banken_loyalty_authorized?
+    raise AuthorizationNotPerformedError unless banken_authorization_performed?
   end
 
-  def banken_loyalty_authorized?
-    !!@_banken_loyalty_authorized
+  def banken_authorization_performed?
+    !!@_banken_authorization_performed
   end
 
   private

@@ -46,14 +46,14 @@ describe Banken do
     end
   end
 
-  describe "#banken_loyalty_authorized?" do
+  describe "#banken_authorization_performed?" do
     it "is true when authorized!" do
       posts_controller.authorize!(post)
-      expect(posts_controller.banken_loyalty_authorized?).to be true
+      expect(posts_controller.banken_authorization_performed?).to be true
     end
 
     it "is false when not authorized!" do
-      expect(posts_controller.banken_loyalty_authorized?).to be false
+      expect(posts_controller.banken_authorization_performed?).to be false
     end
   end
 
