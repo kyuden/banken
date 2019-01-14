@@ -31,7 +31,7 @@ module Banken
   end
 
   def authorize!(record=nil)
-    @_banken_loyalty_authorized = true
+    @_banken_authorization_performed = true
 
     loyalty = loyalty(record)
     unless loyalty.public_send(banken_query_name)
@@ -56,15 +56,21 @@ module Banken
   end
 
   def skip_authorization
-    @_banken_loyalty_authorized = true
+    @_banken_authorization_performed = true
   end
 
   def verify_authorized
-    raise AuthorizationNotPerformedError unless banken_loyalty_authorized?
+    raise AuthorizationNotPerformedError unless banken_authorization_performed?
   end
 
+  def banken_authorization_performed?
+    !!@_banken_authorization_performed
+  end
+
+  # @deprecated Use banken_authorization_performed? instead.
   def banken_loyalty_authorized?
-    !!@_banken_loyalty_authorized
+    ActiveSupport::Deprecation.warn('banken_loyalty_authorized? is deprecated, use banken_authorization_performed? instead.')
+    banken_authorization_performed?
   end
 
   private

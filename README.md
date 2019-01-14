@@ -202,7 +202,7 @@ end
 ```
 
 If you need to perform some more sophisticated logic or you want to raise a custom
-exception you can use the two lower level method `banken_loyalty_authorized?` which
+exception you can use the two lower level method `banken_authorization_performed?` which
 return `true` or `false` depending on whether `authorize!` have been called, respectively.
 
 ## Just plain old Ruby
