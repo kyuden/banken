@@ -67,6 +67,12 @@ module Banken
     !!@_banken_authorization_performed
   end
 
+  # @deprecated Use banken_authorization_performed? instead.
+  def banken_loyalty_authorized?
+    ActiveSupport::Deprecation.warn('banken_loyalty_authorized? is deprecated, use banken_authorization_performed? instead.')
+    banken_authorization_performed?
+  end
+
   private
 
     def banken_action_name

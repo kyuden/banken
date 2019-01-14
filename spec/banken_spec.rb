@@ -46,6 +46,21 @@ describe Banken do
     end
   end
 
+  describe '#banken_loyalty_authorized?' do
+    it "is true when authorized!" do
+      posts_controller.authorize!(post)
+      expect(posts_controller.banken_loyalty_authorized?).to be true
+    end
+
+    it "is false when not authorized!" do
+      expect(posts_controller.banken_loyalty_authorized?).to be false
+    end
+
+    it "outputs deprecation warning" do
+      expect { posts_controller.banken_loyalty_authorized? }.to output(/^DEPRECATION WARNING: banken_loyalty_authorized\? is deprecated, use banken_authorization_performed\? instead\./).to_stderr
+    end
+  end
+
   describe "#banken_authorization_performed?" do
     it "is true when authorized!" do
       posts_controller.authorize!(post)
