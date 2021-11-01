@@ -42,7 +42,8 @@ module Banken
   end
 
   def permitted_attributes(record)
-    name = record.class.to_s.demodulize.underscore
+    name = record.respond_to?(:model_name) && record.model_name.param_key
+    name ||= record.class.to_s.demodulize.underscore
     params.require(name).permit(loyalty(record).permitted_attributes)
   end
 
