@@ -1,6 +1,6 @@
 <img width="350" src="https://raw.github.com/wiki/kyuden/banken/images/banken.png">
 
-[![Build Status](https://img.shields.io/travis/kyuden/banken/master.svg)](https://travis-ci.org/kyuden/banken)
+![Build Status](https://github.com/kyuden/banken/workflows/CI/badge.svg)
 [![Code Climate](https://codeclimate.com/github/kyuden/banken/badges/gpa.svg)](https://codeclimate.com/github/kyuden/banken)
 [![Gem Version](https://badge.fury.io/rb/banken.svg)](https://badge.fury.io/rb/banken)
 
@@ -17,7 +17,7 @@ In first, Look this tutorial:
  - [The difference between Banken and Pundit](https://github.com/kyuden/banken/wiki/The-difference-between-Banken-and-Pundit)
  - [The difference between Banken and Pundit (Japanese)](https://github.com/kyuden/banken/wiki/The-difference-between-Banken-and-Pundit-(Japanese))
 
- 
+
 ## Installation
 
 ``` ruby

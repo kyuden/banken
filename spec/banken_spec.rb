@@ -4,7 +4,7 @@ describe Banken do
   let(:user) { double }
   let(:post) { Post.new(user, 1) }
   let(:post2) { Post.new(user, 2) }
-  let(:comment) { Comment.new }
+  let(:comment) { Post::Comment.new(post) }
   let(:article) { Article.new }
   let(:posts_controller) { PostsController.new(user, { :action => 'update', :controller => 'posts' }) }
 
@@ -141,8 +141,15 @@ describe Banken do
     it "checks loyalty for permitted attributes" do
       params = ActionController::Parameters.new({ controller: 'posts', action: 'update', post: { title: 'Hello', votes: 5, admin: true } })
 
-      expect(PostsController.new(user, params).permitted_attributes(post)).to eq({ 'title' => 'Hello', 'votes' => 5 })
-      expect(PostsController.new(double, params).permitted_attributes(post)).to eq({ 'votes' => 5 })
+      expect(PostsController.new(user, params).permitted_attributes(post).to_h).to eq({ 'title' => 'Hello', 'votes' => 5 })
+      expect(PostsController.new(double, params).permitted_attributes(post).to_h).to eq({ 'votes' => 5 })
+    end
+
+    it "checks loyalty for permitted attributes by ActiveModel" do
+      params = ActionController::Parameters.new({ controller: 'posts/comments', action: 'update', post_comment: { body: 'Hello', published: false, admin: true } })
+
+      expect(Posts::CommentsController.new(user, params).permitted_attributes(comment).to_h).to eq({ 'body' => 'Hello', 'published' => false })
+      expect(Posts::CommentsController.new(double, params).permitted_attributes(comment).to_h).to eq({ 'body' => 'Hello' })
     end
   end
 
