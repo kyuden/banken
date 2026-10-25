@@ -1,5 +1,16 @@
 ## Unreleased
 
+* Infer the loyalty and the query from `controller_path` and `action_name` instead of
+  `params[:controller]` / `params[:action]`, falling back to params only when they are unavailable.
+  Routed requests behave as before unless the controller overrides `self.controller_path`, in which
+  case the loyalty is now looked up from the overridden value. `authorize!` and `loyalty` now also
+  work when a controller is dispatched directly (`PostsController.action(:index).call(env)`), and
+  `loyalty` resolves inside `ActionController::Renderer` (there is no action there, so `authorize!`
+  raises a `Banken::Error` explaining that instead of a `NoMethodError` for `?`).
+* Security: for routes that target an endpoint directly (`get "/x" => PostsController.action(:destroy)`,
+  `mount`), the path parameters carry no controller or action, so the previous inference read them
+  from the query string and a request could pick which loyalty and query were checked. The loyalty
+  and query now come from the controller class and the dispatched action.
 * Errors raised while a loyalty file loads (for example a `NoMethodError` from a typo in the class
   body, or a `NameError` for an unrelated constant) now propagate instead of being reported as
   `Banken::NotDefinedError`. `LoyaltyFinder` uses `safe_constantize`, so only `NameError`s that name
