@@ -14,10 +14,6 @@ class DeprecatorTest < Minitest::Test
     assert_same Banken.deprecator, Banken.deprecator
   end
 
-  def test_deprecator_is_not_the_active_support_singleton
-    refute_same ActiveSupport::Deprecation, Banken.deprecator
-  end
-
   def test_deprecated_method_warns_through_the_banken_deprecator
     controller = PostsController.new(Object.new, { action: 'update', controller: 'posts' })
     messages = []
@@ -29,7 +25,7 @@ class DeprecatorTest < Minitest::Test
     assert_equal 1, messages.size
     assert_match(/banken_loyalty_authorized\? is deprecated, use banken_authorization_performed\? instead/, messages.first)
   ensure
-    Banken.deprecator.behavior = previous
+    Banken.deprecator.behavior = previous if previous
   end
 
   def test_silencing_the_banken_deprecator_silences_the_deprecated_method

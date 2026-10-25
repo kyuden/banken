@@ -333,6 +333,19 @@ def banken_user
 end
 ```
 
+## Deprecation warnings
+
+Banken reports its own deprecations through `Banken.deprecator`, an
+`ActiveSupport::Deprecation` instance. When banken is loaded by Bundler in the
+usual way (after `require "rails/all"`), `Banken::Railtie` registers it with
+`Rails.application.deprecators`, so `config.active_support.deprecation` and
+`config.active_support.report_deprecations` apply to Banken as well. If you
+require banken only after Rails has initialized, register it yourself:
+
+```ruby
+Rails.application.deprecators[:banken] = Banken.deprecator
+```
+
 ## Additional context
 
 Banken strongly encourages you to model your application in such a way that the
