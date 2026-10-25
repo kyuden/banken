@@ -1,5 +1,9 @@
 ## Unreleased
 
+* `rails g banken:loyalty` no longer prints `error  test_unit [not found]` (or `rspec [not found]`): the
+  generator asked the configured test framework for a `loyalty` generator that Banken never shipped.
+  It now only creates the loyalty file; a `--test-framework` option is ignored if passed. Apps that
+  defined their own `test_unit:loyalty` / `rspec:loyalty` generator must now invoke it directly.
 * `loyalty` resolves the loyalty class once per controller instance (per request) instead of on
   every call; loyalty instances are still created fresh for each record and the current `banken_user`.
   The controller helper no longer goes through `Banken.loyalty!` (which is unchanged); code that

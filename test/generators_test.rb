@@ -65,6 +65,19 @@ class GeneratorsTest < Minitest::Test
 
   # banken:loyalty
 
+  def test_loyalty_generator_prints_no_error_with_the_default_test_framework
+    # Rails apps default to test_framework :test_unit. Banken ships no test
+    # generator, so the generator must not try to invoke one.
+    out, err = capture_io { Dir.chdir(@tmpdir) { Banken::Generators::LoyaltyGenerator.new(%w[posts], { test_framework: :test_unit }).invoke_all } }
+
+    refute_match(/error|not found/i, out + err)
+    assert_match(/create\s+app\/loyalties\/posts_loyalty\.rb/, out)
+  end
+
+  def test_loyalty_generator_does_not_expose_a_test_framework_option
+    refute_includes Banken::Generators::LoyaltyGenerator.class_options.keys, :test_framework
+  end
+
   def test_loyalty_generator_creates_a_loyalty_inheriting_from_application_loyalty
     generate(Banken::Generators::LoyaltyGenerator, %w[posts])
 
@@ -97,6 +110,8 @@ class GeneratorsTest < Minitest::Test
 
   private
 
+    # quiet: true suppresses say_status output, so assertions about the
+    # generator output must invoke the generator directly instead.
     def generate(generator, args)
       Dir.chdir(@tmpdir) { generator.new(args, { quiet: true }).invoke_all }
     end
