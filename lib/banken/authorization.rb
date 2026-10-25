@@ -133,7 +133,8 @@ module Banken
 
         loyalty.public_send(query)
       rescue NoMethodError => e
-        raise unless e.name == query.to_sym && e.receiver.equal?(loyalty)
+        # e.name is a String or a Symbol depending on how the method was called.
+        raise unless e.name.to_s == query.to_s && e.receiver.equal?(loyalty)
 
         if loyalty.respond_to?(query, true)
           raise Banken::QueryNotDefinedError, "#{loyalty.class}##{query} is private; queries must be public methods"
