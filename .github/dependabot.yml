@@ -12,4 +12,5 @@ updates:
       # minitest 6 moved Minitest::Mock / #stub into the separate minitest-mock
       # gem; the suite relies on them and pins minitest ~> 5.0.
       - dependency-name: minitest
+        versions: [">= 6"]
         update-types: ["version-update:semver-major"]
