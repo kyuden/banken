@@ -44,4 +44,20 @@
 
 ## 1.0.3 (2019-01-14)
 
-* Renamed `banken_loyalty_authorized?` to `banken_authorization_performed?` (okuramasafumi)
+* Renamed `banken_loyalty_authorized?` to `banken_authorization_performed?`; the old name warns and
+  will be removed in 2.0 (okuramasafumi)
+* `LoyaltyFinder` rejects a nil controller name instead of crashing
+* README: how to call a namespaced loyalty from a view (`loyalty(@post, 'admin/posts')`)
+
+## 1.0.2 (2016-01-30)
+
+* Removed the per-controller loyalty cache introduced in 1.0.1 (it was keyed by record only)
+
+## 1.0.1 (2016-01-30)
+
+* Fixed `loyalty` returning the same instance for different records (#1, tkawa)
+
+## 1.0.0 (2015-12-05)
+
+* First stable release: `authorize!`, `loyalty`, `permitted_attributes`, `verify_authorized`,
+  `skip_authorization`, `banken_user`, `banken:install` and `banken:loyalty` generators

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Banken
   module Generators
     class LoyaltyGenerator < ::Rails::Generators::NamedBase

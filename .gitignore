@@ -5,6 +5,5 @@
 /coverage/
 /doc/
 /pkg/
-/spec/reports/
 /tmp/
 /gemfiles/*.lock
