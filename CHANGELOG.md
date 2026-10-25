@@ -1,5 +1,11 @@
 ## Unreleased
 
+* Errors raised while a loyalty file loads (for example a `NoMethodError` from a typo in the class
+  body, or a `NameError` for an unrelated constant) now propagate instead of being reported as
+  `Banken::NotDefinedError`. `LoyaltyFinder` uses `safe_constantize`, so only `NameError`s that name
+  the loyalty constant or one of its namespaces (including Zeitwerk\x27s "expected file to define
+  constant" error for a file that defines the wrong constant name) still surface as `NotDefinedError`.
+  The `NotDefinedError` message now also names the file expected to define the loyalty.
 * Security: the default `Banken::NotAuthorizedError` message no longer embeds `loyalty.inspect`, which
   included the inspected user and record (every instance variable of plain Ruby objects; for Active Record
   models every attribute not covered by `filter_attributes`) and reached logs, error trackers and any
