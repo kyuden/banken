@@ -113,7 +113,7 @@ class PostsController < ApplicationController
     if @post.update(post_params)
       redirect_to @post
     else
-      render :edit
+      render :edit, status: 422
     end
   end
 end
@@ -129,8 +129,8 @@ and the given optional object. It then infers from the action name, that it shou
 raise "not authorized" unless PostsLoyalty.new(current_user, @post).update?
 ```
 
-If you don't have an optional object for the first argument to `authorize!`, then you can pass
-the class. For example:
+If there is no record to check, call `authorize!` without an argument (the
+loyalty then receives `nil` as its record), or pass the class. For example:
 
 Loyalty:
 ```ruby
@@ -180,8 +180,10 @@ argument. Below calls `Admin::PostsLoyalty`:
 ```
 
 Banken also works for controllers dispatched without the router
-(`PostsController.action(:index).call(env)`), and `loyalty` is available in
-templates rendered through `ActionController::Renderer`.
+(`PostsController.action(:index).call(env)`). In templates rendered through
+`ActionController::Renderer` (`PostsController.render ...`), `loyalty` infers
+the loyalty from the controller the renderer was called on; `authorize!` cannot
+be used there because no action is running.
 
 **Naming caveat:** `loyalty` is a public method on your controllers. Do not
 define a controller action named `loyalty`, or it will shadow the helper. The
@@ -194,7 +196,7 @@ alias) in 2.0.
 for jobs, GraphQL resolvers or anywhere there is no controller:
 
 ``` ruby
-Banken.loyalty!('admin/posts', current_user, post).update?
+Banken.loyalty!('admin/posts', user, post).update?
 ```
 
 ## Ensuring loyalties are used
@@ -232,8 +234,8 @@ end
 ```
 
 If you need to perform some more sophisticated logic or you want to raise a custom
-exception you can use the two lower level method `banken_authorization_performed?` which
-return `true` or `false` depending on whether `authorize!` have been called, respectively.
+exception you can use the lower-level method `banken_authorization_performed?`, which
+returns `true` or `false` depending on whether `authorize!` (or `skip_authorization`) has been called.
 
 ## Just plain old Ruby
 
@@ -457,7 +459,7 @@ class PostsController < ApplicationController
     if @post.update(post_params)
       redirect_to @post
     else
-      render :edit, status: :unprocessable_entity
+      render :edit, status: 422
     end
   end
 
@@ -480,7 +482,7 @@ class PostsController < ApplicationController
     if @post.update(permitted_attributes(@post))
       redirect_to @post
     else
-      render :edit, status: :unprocessable_entity
+      render :edit, status: 422
     end
   end
 end
@@ -515,6 +517,6 @@ class ApplicationController < ActionController::Base
 end
 ```
 
-# License
+## License
 
 Licensed under the MIT license, see the separate LICENSE.txt file.

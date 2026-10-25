@@ -7,7 +7,7 @@
   configuration), `rescue_responses` documented as an
   alternative, inference from `controller_path` / `action_name` explained, naming caveat for an
   action called `loyalty`, `Banken.loyalty!` for use outside controllers. Added SECURITY.md.
-* Packaging: the gem ships only `lib/`, README, CHANGELOG and LICENSE (no more Gemfile, Rakefile,
+* Packaging: the gem ships only `lib/`, README, CHANGELOG, LICENSE and SECURITY.md (no more Gemfile, Rakefile,
   gemfiles/ or CI config); `rubygems_mfa_required` is set, so publishing needs MFA; banken no longer
   requires `active_support/core_ext/module/introspection`, which it never used.
 * `rails g banken:loyalty` no longer prints `error  test_unit [not found]` (or `rspec [not found]`): the
