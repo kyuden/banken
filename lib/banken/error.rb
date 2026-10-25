@@ -12,11 +12,22 @@ module Banken
         @query      = options[:query]
         @loyalty    = options[:loyalty]
 
-        message = options.fetch(:message) { "not allowed to #{query} of #{controller} by #{loyalty.class}" }
+        message = options.fetch(:message) { default_message }
       end
 
       super(message)
     end
+
+    private
+
+      # Names only the loyalty class, the query and the controller. Never
+      # inspects the loyalty: its user and record would end up in logs, error
+      # trackers and any flash built from the message.
+      def default_message
+        action = loyalty ? "#{loyalty.class}##{query}" : query.to_s
+        parts  = ["not allowed to", action, controller && "on #{controller}"]
+        parts.reject { |part| part.nil? || part.empty? }.join(" ")
+      end
   end
 
   class NotDefinedError < Error; end
