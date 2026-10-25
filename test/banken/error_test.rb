@@ -44,4 +44,29 @@ class ErrorTest < Minitest::Test
     assert_nil error.query
     assert_nil error.loyalty
   end
+
+  def test_default_message_does_not_include_user_or_record_details
+    user = Struct.new(:email, :password_digest).new("alice@example.com", "SECRET_HASH")
+    record = Struct.new(:body) do
+      def inspect; "#<Post body=SECRET_BODY>"; end
+    end.new("SECRET_BODY")
+    error = Banken::NotAuthorizedError.new(controller: "posts", query: "update?", loyalty: PostsLoyalty.new(user, record))
+
+    refute_includes error.message, "SECRET_HASH"
+    refute_includes error.message, "SECRET_BODY"
+    refute_includes error.message, "alice@example.com"
+  end
+
+  def test_default_message_names_the_loyalty_class
+    error = Banken::NotAuthorizedError.new(controller: "posts", query: "update?", loyalty: PostsLoyalty.new(nil, nil))
+
+    assert_includes error.message, "PostsLoyalty"
+  end
+
+  def test_default_message_without_a_loyalty_still_names_query_and_controller
+    error = Banken::NotAuthorizedError.new(controller: "posts", query: "update?")
+
+    assert_includes error.message, "update?"
+    assert_includes error.message, "posts"
+  end
 end

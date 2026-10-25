@@ -1,5 +1,9 @@
 ## Unreleased
 
+* Security: the default `Banken::NotAuthorizedError` message no longer embeds `loyalty.inspect`, which
+  included every attribute of the user and the record (and reached logs, error trackers and any
+  `flash` built from the message). It now names only the query, the controller and the loyalty class.
+  The `controller`, `query` and `loyalty` attributes are unchanged.
 * Fix `banken_loyalty_authorized?` raising `NoMethodError` on Rails >= 7.2. Deprecation warnings now go
   through `Banken.deprecator`, which `Banken::Railtie` registers with `Rails.application.deprecators`, so
   `config.active_support.deprecation` applies to Banken. If banken is required after Rails has

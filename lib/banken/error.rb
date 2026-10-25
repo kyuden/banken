@@ -12,7 +12,7 @@ module Banken
         @query      = options[:query]
         @loyalty    = options[:loyalty]
 
-        message = options.fetch(:message) { "not allowed to #{query} of #{controller} by #{loyalty.inspect}" }
+        message = options.fetch(:message) { "not allowed to #{query} of #{controller} by #{loyalty.class}" }
       end
 
       super(message)
