@@ -26,9 +26,9 @@ class GemspecTest < Minitest::Test
     %w[
       lib/banken.rb
       lib/banken/railtie.rb
-      lib/generators/banken/install/templates/application_loyalty.rb
+      lib/generators/banken/install/templates/application_loyalty.rb.tt
       lib/generators/banken/install/USAGE
-      lib/generators/banken/loyalty/templates/loyalty.rb
+      lib/generators/banken/loyalty/templates/loyalty.rb.tt
       lib/generators/banken/loyalty/USAGE
     ].each { |file| assert_includes SPEC.files, file }
   end

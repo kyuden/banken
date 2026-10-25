@@ -309,6 +309,30 @@ class RailsControllerTest < Minitest::Test
     assert_equal "denied controller=integration/posts query=destroy? loyalty=Integration::PostsLoyalty", response.body
   end
 
+  # Banken helpers must not be routable actions
+
+  def test_banken_helpers_are_not_controller_actions
+    actions = Integration::PostsController.action_methods
+
+    Banken::Authorization::HIDDEN_ACTIONS.each { |name| refute_includes actions, name, "#{name} must not be an action" }
+    assert_includes actions, "index"
+    refute Integration::PostsController.new.available_action?("skip_authorization")
+  end
+
+  def test_action_methods_still_pick_up_newly_defined_actions
+    klass = Class.new(Integration::PostsController)
+    refute_includes klass.action_methods, "later"
+    klass.class_eval { def later; end }
+
+    assert_includes klass.action_methods, "later"
+    refute_includes klass.action_methods, "verify_authorized"
+  end
+
+  def test_api_controllers_hide_the_helpers_too
+    refute_includes Integration::Api::PostsController.action_methods, "skip_authorization"
+    assert_includes Integration::Api::PostsController.action_methods, "index"
+  end
+
   # verify_authorized as after_action
 
   def test_verify_authorized_raises_when_the_action_forgot_to_authorize

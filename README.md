@@ -370,8 +370,9 @@ your error messaging.
 
 In some cases your controller might not have access to `current_user`, or your
 `current_user` is not the method that should be invoked by Banken. Simply
-define a method in your controller called `banken_user` (under `private`, so it
-does not become a routable action):
+define a method in your controller called `banken_user`. The Rails 8
+authentication generator, for example, exposes the user as `Current.user` and
+defines no `current_user`:
 
 ```ruby
 class ApplicationController < ActionController::Base
@@ -379,10 +380,15 @@ class ApplicationController < ActionController::Base
 
   private
     def banken_user
-      User.find_by_other_means
+      Current.user
     end
 end
 ```
+
+Banken keeps its own helpers (`authorize!`, `loyalty`, `banken_user`,
+`skip_authorization`, `verify_authorized`, `permitted_attributes`, ...) out of
+the controller's `action_methods`, so a wildcard route cannot dispatch to them
+even though they are public; a `banken_user` override is covered by that too.
 
 ## Deprecation warnings
 

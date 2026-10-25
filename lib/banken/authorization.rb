@@ -22,6 +22,21 @@ module Banken
       end
     end
 
+    # Rails treats every public instance method of a non-abstract controller
+    # as a routable action. Keep Banken's helpers out of that set, so a
+    # wildcard route such as `get "posts/:action"` cannot dispatch to
+    # `skip_authorization` or `verify_authorized`.
+    class_methods do
+      def action_methods
+        @_banken_action_methods ||= super - Banken::Authorization::HIDDEN_ACTIONS
+      end
+
+      def clear_action_methods!
+        @_banken_action_methods = nil
+        super
+      end
+    end
+
     def authorize!(record=nil)
       @_banken_authorization_performed = true
 
@@ -51,7 +66,10 @@ module Banken
     end
 
     def verify_authorized
-      raise Banken::AuthorizationNotPerformedError unless banken_authorization_performed?
+      return if banken_authorization_performed?
+
+      where = [self.class.name, banken_action_name.presence].compact.join("#")
+      raise Banken::AuthorizationNotPerformedError, "#{where} did not call authorize! or skip_authorization"
     end
 
     def banken_authorization_performed?
@@ -63,6 +81,10 @@ module Banken
       Banken.deprecator.warn('banken_loyalty_authorized? is deprecated, use banken_authorization_performed? instead.')
       banken_authorization_performed?
     end
+
+    # The public helpers above, by name. Computed here so that it always
+    # matches what the module actually defines.
+    HIDDEN_ACTIONS = public_instance_methods(false).map(&:to_s).sort.freeze
 
     private
 
@@ -102,10 +124,14 @@ module Banken
         params.require(banken_param_key(record))
       end
 
-      # The params key for `record`, which may be an instance or a class:
-      # Post / Post.new -> "post", Admin::Post -> "post". Override (keep it
-      # private) to use e.g. `record.model_name.param_key` ("admin_post").
+      # The params key for `record`, which may be an instance, a class or a
+      # Symbol: Post / Post.new -> "post", Admin::Post -> "post", :post -> "post".
+      # Override (keep it private) to use e.g. `record.model_name.param_key`
+      # ("admin_post").
       def banken_param_key(record)
+        return record.to_s if record.is_a?(Symbol)
+        raise ArgumentError, "cannot infer a params key for nil; pass a record, a class or a Symbol" if record.nil?
+
         klass = record.is_a?(Class) ? record : record.class
         name  = klass.name || raise(ArgumentError, "cannot infer a params key for an anonymous class")
         name.demodulize.underscore

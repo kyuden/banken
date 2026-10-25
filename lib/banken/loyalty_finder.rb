@@ -10,7 +10,9 @@ module Banken
       @controller_name = controller_name.to_s
     end
 
-    # Returns the loyalty class, or nil when no such constant exists.
+    # Returns the loyalty class, or nil when no such constant exists (or when
+    # no controller name was given: an empty name must not resolve a
+    # top-level `Loyalty` constant).
     #
     # `safe_constantize` only swallows NameErrors whose name matches a segment
     # of the loyalty name (or that carry no name at all); this includes
@@ -18,6 +20,8 @@ module Banken
     # raised while the loyalty file loads, such as a NoMethodError from a typo
     # in the class body, propagates so the real bug is visible.
     def loyalty
+      return nil if controller_name.empty?
+
       loyalty_name.safe_constantize
     end
 
@@ -32,8 +36,11 @@ module Banken
       end
 
       def not_defined_message
-        hint = controller_name.empty? ? "" : " (expected app/loyalties/#{controller_name}_loyalty.rb to define it)"
-        "unable to find loyalty `#{loyalty_name}` for `#{controller_name}`#{hint}"
+        if controller_name.empty?
+          "unable to find a loyalty: no controller name was given"
+        else
+          "unable to find loyalty `#{loyalty_name}` for `#{controller_name}` (expected app/loyalties/#{controller_name}_loyalty.rb to define it)"
+        end
       end
   end
 end
