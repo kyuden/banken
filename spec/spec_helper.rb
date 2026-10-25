@@ -4,6 +4,7 @@ require "rack"
 require "rack/test"
 require "active_support"
 require "active_support/core_ext"
+require "action_controller"
 require "action_controller/metal/strong_parameters"
 
 require "pry"

@@ -141,8 +141,8 @@ describe Banken do
     it "checks loyalty for permitted attributes" do
       params = ActionController::Parameters.new({ controller: 'posts', action: 'update', post: { title: 'Hello', votes: 5, admin: true } })
 
-      expect(PostsController.new(user, params).permitted_attributes(post)).to eq({ 'title' => 'Hello', 'votes' => 5 })
-      expect(PostsController.new(double, params).permitted_attributes(post)).to eq({ 'votes' => 5 })
+      expect(PostsController.new(user, params).permitted_attributes(post).to_h).to eq({ 'title' => 'Hello', 'votes' => 5 })
+      expect(PostsController.new(double, params).permitted_attributes(post).to_h).to eq({ 'votes' => 5 })
     end
   end
 
