@@ -19,9 +19,9 @@ class PublicApiTest < Minitest::Test
   end
 
   def test_inference_hooks_stay_private
-    # Not an exhaustive list: private helpers may be added freely. These three
-    # must simply never become public actions.
-    %i[banken_action_name banken_controller_name banken_query_name].each do |name|
+    # Not an exhaustive list: private helpers may be added freely. These must
+    # simply never become public actions.
+    %i[banken_action_name banken_controller_name banken_query_name banken_params_for banken_param_key].each do |name|
       assert_includes Banken.private_instance_methods(false), name
     end
   end
