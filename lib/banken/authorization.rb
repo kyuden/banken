@@ -42,9 +42,8 @@ module Banken
 
       loyalty = loyalty(record)
       query   = banken_query_name
-      banken_verify_query_defined!(loyalty, query)
 
-      unless loyalty.public_send(query)
+      unless banken_query(loyalty, query)
         raise Banken::NotAuthorizedError.new(controller: banken_controller_name, query: query, loyalty: loyalty)
       end
 
@@ -120,19 +119,34 @@ module Banken
         end
       end
 
-      # A query must be defined by the loyalty itself (or a module/superclass
-      # of it below Object). ActiveSupport defines `present?` and `duplicable?`
-      # on every object and both return true, so an action named `present`
-      # would otherwise authorize everyone. Undefined queries raise
-      # NotDefinedError instead of NoMethodError.
-      def banken_verify_query_defined!(loyalty, query)
-        if loyalty.respond_to?(query)
-          owner = loyalty.method(query).owner
-          return unless Object.ancestors.include?(owner)
-          raise Banken::NotDefinedError, "#{loyalty.class}##{query} is not defined by the loyalty (inherited from #{owner})"
+      # Calls the query on the loyalty. A query must be defined by the loyalty
+      # itself (or a module/superclass of it below Object): ActiveSupport
+      # defines `present?` and `duplicable?` on every object and both return
+      # true, so an action named `present` would otherwise authorize everyone.
+      # Queries answered through method_missing keep working. A missing or
+      # private query raises QueryNotDefinedError instead of NoMethodError.
+      def banken_query(loyalty, query)
+        owner = banken_query_owner(loyalty, query)
+        if owner && Object <= owner
+          raise Banken::QueryNotDefinedError, "#{loyalty.class}##{query} is not defined by the loyalty (inherited from #{owner})"
         end
 
-        raise Banken::NotDefinedError, "#{loyalty.class}##{query} is not defined"
+        loyalty.public_send(query)
+      rescue NoMethodError => e
+        raise unless e.name == query.to_sym && e.receiver.equal?(loyalty)
+
+        if loyalty.respond_to?(query, true)
+          raise Banken::QueryNotDefinedError, "#{loyalty.class}##{query} is private; queries must be public methods"
+        end
+        raise Banken::QueryNotDefinedError, "#{loyalty.class}##{query} is not defined"
+      end
+
+      # The module that defines the query, or nil when it is not a statically
+      # defined method (method_missing, or a loyalty overriding respond_to?).
+      def banken_query_owner(loyalty, query)
+        loyalty.method(query).owner
+      rescue NameError
+        nil
       end
 
       # Resolving a loyalty class means camelizing and constantizing the controller

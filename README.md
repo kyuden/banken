@@ -192,8 +192,9 @@ the loyalty from the controller the renderer was called on; `authorize!` cannot
 be used there because no action is running.
 
 A query is only consulted if the loyalty (or a module or superclass of it)
-defines it; methods every Ruby object has, such as `present?`, do not count, and
-an undefined query raises `Banken::NotDefinedError`. Return `true` or `false`
+defines it (`method_missing` counts); methods every Ruby object has, such as
+`present?`, do not, and an undefined or private query raises
+`Banken::QueryNotDefinedError`, a subclass of `NotDefinedError`. Return `true` or `false`
 from queries: any truthy value authorizes.
 
 The second argument of `loyalty` must come from your code, never from the

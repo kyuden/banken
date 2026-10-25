@@ -75,6 +75,62 @@ class HardeningTest < Minitest::Test
     assert_equal true, PostsController.new(@user, { action: 'show', controller: 'posts' }).authorize!(@post)
   end
 
+  def test_query_errors_are_a_distinguishable_subclass_of_not_defined_error
+    @controller.params[:action] = 'update_all'
+    error = assert_raises(Banken::QueryNotDefinedError) { @controller.authorize!(@post) }
+
+    assert_kind_of Banken::NotDefinedError, error
+  end
+
+  def test_authorize_bang_still_accepts_queries_answered_through_method_missing
+    Object.const_set(:DynamicPostsLoyalty, Class.new(ApplicationLoyalty) do
+      def method_missing(name, *args)
+        name.to_s.end_with?("?") ? true : super
+      end
+      # deliberately no respond_to_missing?
+    end)
+    controller = PostsController.new(@user, { action: 'archive', controller: 'dynamic_posts' })
+
+    assert_equal true, controller.authorize!(@post)
+  ensure
+    Object.send(:remove_const, :DynamicPostsLoyalty) if Object.const_defined?(:DynamicPostsLoyalty, false)
+  end
+
+  def test_authorize_bang_tolerates_a_loyalty_overriding_respond_to_without_respond_to_missing
+    Object.const_set(:StrictPostsLoyalty, Class.new(ApplicationLoyalty) do
+      def respond_to?(*) = false
+      def show?; true; end
+    end)
+    controller = PostsController.new(@user, { action: 'show', controller: 'strict_posts' })
+
+    assert_equal true, controller.authorize!(@post)
+  ensure
+    Object.send(:remove_const, :StrictPostsLoyalty) if Object.const_defined?(:StrictPostsLoyalty, false)
+  end
+
+  def test_private_queries_are_reported_as_private
+    Object.const_set(:PrivatePostsLoyalty, Class.new(ApplicationLoyalty) do
+      private def show?; true; end
+    end)
+    controller = PostsController.new(@user, { action: 'show', controller: 'private_posts' })
+    error = assert_raises(Banken::QueryNotDefinedError) { controller.authorize!(@post) }
+
+    assert_includes error.message, "private"
+  ensure
+    Object.send(:remove_const, :PrivatePostsLoyalty) if Object.const_defined?(:PrivatePostsLoyalty, false)
+  end
+
+  def test_a_no_method_error_raised_inside_a_query_propagates_unchanged
+    Object.const_set(:BrokenPostsLoyalty, Class.new(ApplicationLoyalty) do
+      def show?; record.no_such_method; end
+    end)
+    controller = PostsController.new(@user, { action: 'show', controller: 'broken_posts' })
+
+    assert_raises(NoMethodError) { controller.authorize!(@post) }
+  ensure
+    Object.send(:remove_const, :BrokenPostsLoyalty) if Object.const_defined?(:BrokenPostsLoyalty, false)
+  end
+
   # on a Rails controller, params never substitute for action_name / controller_path
 
   def test_rails_hosts_do_not_fall_back_to_params_for_the_controller_name
@@ -102,14 +158,16 @@ class HardeningTest < Minitest::Test
 
   def test_permitted_attributes_raises_parameter_missing_for_a_scalar_value
     params = ActionController::Parameters.new(controller: "posts", action: "update", post: "scalar")
+    error = assert_raises(ActionController::ParameterMissing) { PostsController.new(@user, params).permitted_attributes(@post) }
 
-    assert_raises(ActionController::ParameterMissing) { PostsController.new(@user, params).permitted_attributes(@post) }
+    assert_equal "post", error.param.to_s
   end
 
   def test_permitted_attributes_raises_parameter_missing_for_an_array_value
     params = ActionController::Parameters.new(controller: "posts", action: "update", post: ["a", "b"])
+    error = assert_raises(ActionController::ParameterMissing) { PostsController.new(@user, params).permitted_attributes(@post) }
 
-    assert_raises(ActionController::ParameterMissing) { PostsController.new(@user, params).permitted_attributes(@post) }
+    assert_equal "post", error.param.to_s
   end
 
   # the helper names are known

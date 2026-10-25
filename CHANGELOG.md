@@ -3,8 +3,9 @@
 * Security: `authorize!` only consults queries defined by the loyalty itself (or a module or superclass
   below `Object`). ActiveSupport defines `present?` and `duplicable?` on every object and both return
   `true`, so an action named `present` or `duplicable` passed `authorize!` with a loyalty that defined
-  nothing. Such queries, and undefined ones, now raise `Banken::NotDefinedError` (undefined queries used
-  to raise `NoMethodError`).
+  nothing. Such queries, undefined queries and private queries now raise `Banken::QueryNotDefinedError`
+  (a subclass of `NotDefinedError`; undefined queries used to raise `NoMethodError`, so code rescuing or
+  asserting `NoMethodError` there must change). Queries answered through `method_missing` keep working.
 * Security: on a Rails controller, `params[:controller]` / `params[:action]` are never consulted any
   more. Anonymous controllers (`controller_path` nil) used to fall back to `params[:controller]`,
   which comes from the query string there, letting a request choose the loyalty. They now raise
@@ -18,7 +19,8 @@
 * Banken's helpers (`authorize!`, `loyalty`, `skip_authorization`, `verify_authorized`, `banken_user`,
   `permitted_attributes`, `banken_authorization_performed?`, `banken_loyalty_authorized?`) are excluded
   from the controller's `action_methods`, so routes with a dynamic `:action` segment can no longer
-  dispatch to them. Same as Pundit #269 / #357.
+  dispatch to them. A controller action that happens to carry one of these names is no longer routable
+  either (such a controller could not have used Banken anyway). Same as Pundit #269 / #357.
 * `verify_authorized` now says which controller and action forgot to authorize
   (`PostsController#update did not call authorize! or skip_authorization`).
 * `permitted_attributes` accepts a Symbol as the record (`permitted_attributes(:post)` reads
