@@ -40,7 +40,9 @@ class LoyaltyFinderTest < Minitest::Test
   end
 
   def test_nil_controller_name_is_treated_as_missing_rather_than_crashing
-    assert_raises(Banken::NotDefinedError) { Banken::LoyaltyFinder.new(nil).loyalty! }
+    error = assert_raises(Banken::NotDefinedError) { Banken::LoyaltyFinder.new(nil).loyalty! }
+
+    refute_includes error.message, "_loyalty.rb", "no file hint can be given without a controller name"
   end
 
   def test_does_not_resolve_classes_without_the_loyalty_suffix
