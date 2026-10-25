@@ -84,7 +84,7 @@ class GeneratorsTest < Minitest::Test
     assert_match(/class Admin::PostsLoyalty < ApplicationLoyalty/, File.read("#{@tmpdir}/app/loyalties/admin/posts_loyalty.rb"))
   end
 
-  def test_generated_loyalty_resolves_through_the_loyalty_finder
+  def test_generated_loyalty_inherits_the_generated_application_loyalty_defaults
     generate(Banken::Generators::InstallGenerator, [])
     generate(Banken::Generators::LoyaltyGenerator, %w[widgets])
     namespace = Module.new

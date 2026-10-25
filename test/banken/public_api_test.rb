@@ -14,18 +14,16 @@ class PublicApiTest < Minitest::Test
     verify_authorized
   ].freeze
 
-  EXPECTED_PRIVATE_METHODS = %w[
-    banken_action_name
-    banken_controller_name
-    banken_query_name
-  ].freeze
-
   def test_public_instance_methods_added_to_the_controller
     assert_equal EXPECTED_PUBLIC_METHODS, Banken.public_instance_methods(false).map(&:to_s).sort
   end
 
-  def test_private_instance_methods_added_to_the_controller
-    assert_equal EXPECTED_PRIVATE_METHODS, Banken.private_instance_methods(false).map(&:to_s).sort
+  def test_inference_hooks_stay_private
+    # Not an exhaustive list: private helpers may be added freely. These three
+    # must simply never become public actions.
+    %i[banken_action_name banken_controller_name banken_query_name].each do |name|
+      assert_includes Banken.private_instance_methods(false), name
+    end
   end
 
   def test_module_level_loyalty_bang_is_available_outside_controllers

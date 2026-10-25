@@ -21,6 +21,13 @@ class LoyaltyFinderTest < Minitest::Test
     assert_nil Banken::LoyaltyFinder.new("articles").loyalty
   end
 
+  def test_namespaced_lookup_does_not_fall_back_to_the_top_level_loyalty
+    # Only CommentsLoyalty exists. An admin controller must not silently get it.
+    assert_equal CommentsLoyalty, Banken::LoyaltyFinder.new("comments").loyalty
+    assert_nil Banken::LoyaltyFinder.new("admin/comments").loyalty
+    assert_raises(Banken::NotDefinedError) { Banken::LoyaltyFinder.new("admin/comments").loyalty! }
+  end
+
   def test_loyalty_bang_raises_not_defined_error_naming_both_the_class_and_the_controller
     error = assert_raises(Banken::NotDefinedError) { Banken::LoyaltyFinder.new("articles").loyalty! }
     assert_includes error.message, "ArticlesLoyalty"
@@ -38,6 +45,17 @@ class LoyaltyFinderTest < Minitest::Test
 
   def test_does_not_resolve_classes_without_the_loyalty_suffix
     assert_nil Banken::LoyaltyFinder.new("post").loyalty
+  end
+
+  def test_resolution_triggers_autoload_for_lazily_defined_loyalties
+    # Rails apps define loyalties through Zeitwerk autoloading, so the lookup
+    # must go through constant resolution that honours Module#autoload.
+    Object.autoload :LazyPostsLoyalty, File.expand_path("../fixtures/lazy_posts_loyalty.rb", __dir__)
+
+    loyalty_class = Banken::LoyaltyFinder.new("lazy_posts").loyalty!
+
+    assert_equal "LazyPostsLoyalty", loyalty_class.name
+    assert_nil Object.autoload?(:LazyPostsLoyalty), "constant should have been loaded by the lookup"
   end
 
   def test_suffix_constant_is_part_of_the_public_contract

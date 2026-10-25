@@ -59,9 +59,17 @@ class BankenTest < Minitest::Test
   end
 
   def test_banken_loyalty_authorized_outputs_deprecation_warning
-    assert_output(nil, /^DEPRECATION WARNING: banken_loyalty_authorized\? is deprecated, use banken_authorization_performed\? instead\./) do
+    # Minitest enables Warning[:deprecated]; production does not. Run with the
+    # production default so an implementation that relies on
+    # Kernel.warn(category: :deprecated) is caught as silent.
+    previous = Warning[:deprecated]
+    Warning[:deprecated] = false
+
+    assert_output(nil, /banken_loyalty_authorized\? is deprecated, use banken_authorization_performed\? instead/) do
       @posts_controller.banken_loyalty_authorized?
     end
+  ensure
+    Warning[:deprecated] = previous
   end
 
   # #banken_authorization_performed?

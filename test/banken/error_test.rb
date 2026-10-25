@@ -34,7 +34,7 @@ class ErrorTest < Minitest::Test
   def test_not_authorized_error_can_be_raised_without_arguments
     error = assert_raises(Banken::NotAuthorizedError) { raise Banken::NotAuthorizedError }
     assert_nil error.query
-    assert_kind_of String, error.message
+    refute_empty error.message
   end
 
   def test_not_authorized_error_string_form_leaves_attributes_nil

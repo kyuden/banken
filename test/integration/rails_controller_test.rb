@@ -29,7 +29,6 @@ module Integration
   end
 
   class RawLoyalty < PostsLoyalty; end
-  class DashboardsLoyalty < ApplicationLoyalty; end
   class CustomUsersLoyalty < ApplicationLoyalty
     def show?; user == :from_banken_user; end
   end
@@ -77,11 +76,15 @@ module Integration
   end
 
   class PostsController < ApplicationController
-    before_action :require_login, only: :edit
+    before_action :require_login, only: [:edit, :unverified_after_filter]
 
     def index
       authorize!
       render plain: "index ok"
+    end
+
+    def unverified_after_filter
+      render plain: "forgot to authorize after a filter"
     end
 
     def show
@@ -197,6 +200,7 @@ module Integration
     get    "/posts"              => "integration/posts#index"
     post   "/posts"              => "integration/posts#create"
     get    "/posts/unverified"   => "integration/posts#unverified"
+    get    "/posts/unverified_after_filter" => "integration/posts#unverified_after_filter"
     get    "/posts/inline_view"  => "integration/posts#inline_view"
     get    "/posts/show_names"   => "integration/posts#show_names"
     get    "/posts/:id"          => "integration/posts#show"
@@ -255,6 +259,7 @@ class RailsControllerTest < Minitest::Test
     response = request(:post, "/posts", params: { "controller" => "integration/raw", "action" => "destroy", "post" => { "title" => "t" } })
 
     assert_equal 200, response.status
+    assert_equal [["title", "t"]].inspect, response.body
   end
 
   def test_namespaced_controllers_resolve_namespaced_loyalties
@@ -296,9 +301,13 @@ class RailsControllerTest < Minitest::Test
   end
 
   def test_verify_authorized_runs_after_a_before_action_that_does_not_halt
-    response = request(:get, "/posts/1/edit", user: :admin, owner: true)
+    assert_raises(Banken::AuthorizationNotPerformedError) { request(:get, "/posts/unverified_after_filter", user: :admin) }
+  end
 
-    assert_equal "edit ok", response.body
+  def test_before_action_halt_also_skips_verification_of_an_unauthorized_action
+    response = request(:get, "/posts/unverified_after_filter", user: :guest)
+
+    assert_equal 302, response.status
   end
 
   # banken_user

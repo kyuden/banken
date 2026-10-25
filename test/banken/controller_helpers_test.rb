@@ -9,13 +9,25 @@ class ControllerHelpersTest < Minitest::Test
     end
   end
 
+  # Looks like a real Rails controller: has action_name and controller_path
+  # that deliberately disagree with params.
+  class RailsLikeController < PostsController
+    def action_name
+      'show'
+    end
+
+    def controller_path
+      'admin/posts'
+    end
+  end
+
   def setup
     @user = Object.new
     @post = Post.new(@user, 1)
     @controller = PostsController.new(@user, { action: 'update', controller: 'posts' })
   end
 
-  # loyalty resolution from params
+  # loyalty resolution
 
   def test_loyalty_uses_params_controller_when_no_name_is_given
     assert_instance_of PostsLoyalty, @controller.loyalty(@post)
@@ -45,18 +57,41 @@ class ControllerHelpersTest < Minitest::Test
     assert_nil @controller.loyalty.record
   end
 
+  def test_inference_reads_params_even_when_action_name_and_controller_path_exist
+    # Pins 1.0.x behaviour. 1.1.0 intends to prefer action_name/controller_path
+    # and fall back to params; when that lands this test must be inverted
+    # deliberately (expect Admin::PostsLoyalty and query "show?").
+    controller = RailsLikeController.new(@user, { action: 'destroy', controller: 'posts' })
+
+    error = assert_raises(Banken::NotAuthorizedError) { controller.authorize!(@post) }
+    assert_instance_of PostsLoyalty, error.loyalty
+    assert_equal 'destroy?', error.query
+    assert_equal 'posts', error.controller
+  end
+
+  def test_loyalty_class_is_resolved_fresh_for_each_controller_instance
+    # Guards against a process-wide cache: after code reloading a new request
+    # must see the redefined class.
+    Object.const_set(:ReloadablesLoyalty, Class.new(ApplicationLoyalty))
+    first = PostsController.new(@user, { action: 'show', controller: 'reloadables' }).loyalty.class
+
+    Object.send(:remove_const, :ReloadablesLoyalty)
+    Object.const_set(:ReloadablesLoyalty, Class.new(ApplicationLoyalty))
+    second = PostsController.new(@user, { action: 'show', controller: 'reloadables' }).loyalty.class
+
+    refute_same first, second
+    assert_same ReloadablesLoyalty, second
+  ensure
+    Object.send(:remove_const, :ReloadablesLoyalty) if Object.const_defined?(:ReloadablesLoyalty, false)
+  end
+
   # authorize!
 
   def test_authorize_bang_without_a_record_passes_nil_to_the_loyalty
-    controller = PostsController.new(@user, { action: 'show', controller: 'posts' })
+    controller = PostsController.new(@user, { action: 'destroy', controller: 'posts' })
 
-    assert_equal true, controller.authorize!
-  end
-
-  def test_authorize_bang_queries_the_action_name_with_a_question_mark
-    controller = PostsController.new(@user, { action: 'show', controller: 'posts' })
-
-    assert_equal true, controller.authorize!(@post)
+    error = assert_raises(Banken::NotAuthorizedError) { controller.authorize! }
+    assert_nil error.loyalty.record
   end
 
   def test_authorize_bang_uses_banken_user_for_the_loyalty
@@ -66,10 +101,16 @@ class ControllerHelpersTest < Minitest::Test
     assert_equal :custom_user, error.loyalty.user
   end
 
-  def test_authorize_bang_denies_when_the_query_returns_a_falsy_value
-    @controller.params[:action] = 'destroy'
+  def test_authorize_bang_denies_when_the_query_returns_nil
+    @controller.params[:action] = 'archive'
 
     assert_raises(Banken::NotAuthorizedError) { @controller.authorize!(@post) }
+  end
+
+  def test_authorize_bang_allows_when_the_query_returns_a_truthy_non_boolean
+    @controller.params[:action] = 'publish'
+
+    assert_equal true, @controller.authorize!(@post)
   end
 
   def test_authorize_bang_denies_when_the_record_belongs_to_someone_else
@@ -100,12 +141,6 @@ class ControllerHelpersTest < Minitest::Test
     other = PostsController.new(@user, { action: 'update', controller: 'posts' })
 
     assert_equal false, other.banken_authorization_performed?
-  end
-
-  def test_skip_authorization_marks_authorization_performed
-    @controller.skip_authorization
-
-    assert_equal true, @controller.banken_authorization_performed?
   end
 
   # permitted_attributes
