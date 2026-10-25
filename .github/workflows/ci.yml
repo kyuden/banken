@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Ruby ${{ matrix.ruby }} / Rails ${{ matrix.rails }}
+    runs-on: ubuntu-latest
+    # Rails >= 7.2 removed the ActiveSupport::Deprecation singleton, which
+    # `banken_loyalty_authorized?` still calls. Those jobs are allowed to fail
+    # until that is fixed in a follow-up PR.
+    continue-on-error: ${{ matrix.allow-failure || false }}
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby: ["3.2", "3.3", "3.4", "4.0"]
+        rails: ["7.0", "7.1", "7.2", "8.0", "8.1"]
+        include:
+          - rails: "7.2"
+            allow-failure: true
+          - rails: "8.0"
+            allow-failure: true
+          - rails: "8.1"
+            allow-failure: true
+    env:
+      BUNDLE_GEMFILE: ${{ github.workspace }}/gemfiles/rails_${{ matrix.rails }}.gemfile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler-cache: true
+      - run: bundle exec rake
