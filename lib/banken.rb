@@ -77,11 +77,17 @@ module Banken
 
   private
 
-    # Rails sets action_name and controller_path on every controller; they are
-    # also available where params[:controller] is not (direct dispatch with
-    # Controller.action(...), ActionController::Renderer). action_name is nil
-    # until #process runs, so fall back to params in that case and for
-    # non-Rails hosts that only provide params.
+    # Rails sets action_name and controller_path on every controller and, unlike
+    # params[:controller] / params[:action], they cannot be supplied by the
+    # request: for routes that target an endpoint directly
+    # (`get "/x" => PostsController.action(:destroy)`, `mount`) the path
+    # parameters carry no controller or action, so params would come from the
+    # query string. They are also available where params are not, such as a
+    # controller dispatched with Controller.action(...).call(env) and views
+    # rendered through ActionController::Renderer (controller_path only; there
+    # is no action there). params remain the fallback for non-Rails hosts that
+    # only provide params, for action_name being nil before #process runs, and
+    # for anonymous controllers whose controller_path is nil.
     def banken_action_name
       (respond_to?(:action_name) && action_name.presence) || params[:action]
     end
@@ -91,6 +97,10 @@ module Banken
     end
 
     def banken_query_name
-      "#{banken_action_name}?"
+      action = banken_action_name
+      if action.blank?
+        raise Error, "unable to infer the query: no action name is available (authorize! must run inside a controller action)"
+      end
+      "#{action}?"
     end
 end

@@ -107,6 +107,19 @@ class ControllerHelpersTest < Minitest::Test
     Object.send(:remove_const, :ReloadablesLoyalty) if Object.const_defined?(:ReloadablesLoyalty, false)
   end
 
+  def test_authorize_bang_raises_a_banken_error_when_no_action_name_can_be_inferred
+    # ActionController::Renderer: controller_path is set, action_name is nil, params are empty.
+    renderer_like = Class.new(PostsController) do
+      def action_name; nil; end
+      def controller_path; "posts"; end
+    end
+    controller = renderer_like.new(@user, {})
+
+    assert_instance_of PostsLoyalty, controller.loyalty(@post)
+    error = assert_raises(Banken::Error) { controller.authorize!(@post) }
+    assert_includes error.message, "action name"
+  end
+
   # authorize!
 
   def test_authorize_bang_without_a_record_passes_nil_to_the_loyalty

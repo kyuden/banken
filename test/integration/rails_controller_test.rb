@@ -213,6 +213,7 @@ module Integration
     get    "/strict"             => "integration/strict#show"
     get    "/admin/posts"        => "integration/admin/posts#index"
     get    "/api/posts"          => "integration/api/posts#index"
+    get    "/endpoint"           => Integration::PostsController.action(:destroy)
   end
 end
 
@@ -297,6 +298,15 @@ class RailsControllerTest < Minitest::Test
 
     assert_equal 403, status
     assert_equal "denied controller=integration/posts query=destroy? loyalty=Integration::PostsLoyalty", body.each.to_a.join
+  end
+
+  def test_endpoint_routes_cannot_have_loyalty_or_query_chosen_through_the_query_string
+    # Routes that target an endpoint directly put no controller/action into the
+    # path parameters, so params[:controller] would come from the query string.
+    response = request(:get, "/endpoint?controller=integration/admin/posts&action=index", user: :admin)
+
+    assert_equal 403, response.status
+    assert_equal "denied controller=integration/posts query=destroy? loyalty=Integration::PostsLoyalty", response.body
   end
 
   # verify_authorized as after_action
