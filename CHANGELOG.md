@@ -1,5 +1,8 @@
 ## Unreleased
 
+* `loyalty` resolves the loyalty class once per controller instance (per request) instead of on
+  every call; loyalty instances are still created fresh for each record and the current `banken_user`.
+  `Banken.loyalty!` is unchanged.
 * `permitted_attributes` accepts a class as the record (`permitted_attributes(Post)` reads
   `params[:post]`; it used to read `params[:class]`). Two private hooks can be overridden in the
   controller: `banken_param_key(record)` (defaults to the demodulized, underscored class name) and
