@@ -58,6 +58,28 @@ class LoyaltyFinderTest < Minitest::Test
     assert_nil Object.autoload?(:LazyPostsLoyalty), "constant should have been loaded by the lookup"
   end
 
+  def test_errors_inside_an_autoloaded_loyalty_file_propagate
+    # A NoMethodError raised while the loyalty file is being loaded is a bug in
+    # the application, not a missing loyalty. It must surface as itself.
+    Object.autoload :BuggyPostsLoyalty, File.expand_path("../fixtures/buggy_posts_loyalty.rb", __dir__)
+
+    error = assert_raises(NoMethodError) { Banken::LoyaltyFinder.new("buggy_posts").loyalty! }
+    assert_includes error.message, "permit_everything_for"
+  ensure
+    Object.send(:remove_const, :BuggyPostsLoyalty) if Object.const_defined?(:BuggyPostsLoyalty, false)
+  end
+
+  def test_missing_parent_namespace_is_treated_as_missing
+    assert_nil Banken::LoyaltyFinder.new("nonexistent_ns/posts").loyalty
+    assert_raises(Banken::NotDefinedError) { Banken::LoyaltyFinder.new("nonexistent_ns/posts").loyalty! }
+  end
+
+  def test_not_defined_error_message_names_the_expected_file
+    error = assert_raises(Banken::NotDefinedError) { Banken::LoyaltyFinder.new("admin/articles").loyalty! }
+
+    assert_includes error.message, "app/loyalties/admin/articles_loyalty.rb"
+  end
+
   def test_suffix_constant_is_part_of_the_public_contract
     assert_equal "Loyalty", Banken::LoyaltyFinder::SUFFIX
   end
