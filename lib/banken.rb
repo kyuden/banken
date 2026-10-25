@@ -96,8 +96,8 @@ module Banken
     end
 
     # Resolving a loyalty class means camelizing and constantizing the controller
-    # name (about 2 microseconds); a view may do that dozens of times per
-    # request. Memoize the class per controller instance (i.e. per request), so
+    # name (a few microseconds, more for namespaced names); a view may do that
+    # dozens of times per request. Memoize the class per controller instance (i.e. per request), so
     # code reloading in development still sees new classes on the next request.
     # Only the class is memoized, never the instance: a loyalty is built fresh
     # for every record and for the current banken_user.

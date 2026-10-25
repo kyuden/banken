@@ -131,6 +131,10 @@ class ControllerHelpersTest < Minitest::Test
     assert_instance_of Admin::PostsLoyalty, @controller.loyalty(@post, "admin/posts")
   end
 
+  def test_loyalty_class_memo_treats_symbol_and_string_names_as_the_same_key
+    assert_equal 1, finder_instantiations { @controller.loyalty(@post, :posts); @controller.loyalty(@post, "posts"); @controller.loyalty(@post) }
+  end
+
   def test_failed_lookup_is_not_memoized
     controller = PostsController.new(@user, { action: "show", controller: "late_defined" })
     assert_raises(Banken::NotDefinedError) { controller.loyalty }
