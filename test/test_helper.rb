@@ -7,6 +7,7 @@ require "action_controller"
 require "action_controller/metal/strong_parameters"
 
 require "minitest/autorun"
+require "minitest/mock"
 
 I18n.enforce_available_locales = false
 

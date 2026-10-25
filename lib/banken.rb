@@ -49,7 +49,7 @@ module Banken
 
   def loyalty(record=nil, controller_name=nil)
     controller_name = banken_controller_name unless controller_name
-    Banken.loyalty!(controller_name, banken_user, record)
+    banken_loyalty_class(controller_name).new(banken_user, record)
   end
 
   def banken_user
@@ -93,6 +93,17 @@ module Banken
 
     def banken_controller_name
       (respond_to?(:controller_path) && controller_path.presence) || params[:controller]
+    end
+
+    # Resolving a loyalty class means camelizing and constantizing the controller
+    # name (a few microseconds, more for namespaced names); a view may do that
+    # dozens of times per request. Memoize the class per controller instance (i.e. per request), so
+    # code reloading in development still sees new classes on the next request.
+    # Only the class is memoized, never the instance: a loyalty is built fresh
+    # for every record and for the current banken_user.
+    def banken_loyalty_class(controller_name)
+      @_banken_loyalty_classes ||= {}
+      @_banken_loyalty_classes[controller_name.to_s] ||= LoyaltyFinder.new(controller_name).loyalty!
     end
 
     # The parameters that hold the attributes of `record`, before filtering.

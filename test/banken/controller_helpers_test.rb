@@ -120,6 +120,45 @@ class ControllerHelpersTest < Minitest::Test
     assert_includes error.message, "action name"
   end
 
+  # loyalty class memoization (per controller instance; instances are never cached)
+
+  def test_loyalty_class_is_resolved_once_per_controller_instance
+    assert_equal 1, finder_instantiations { @controller.loyalty(@post); @controller.loyalty(@post2); @controller.loyalty }
+  end
+
+  def test_loyalty_class_memo_is_keyed_by_controller_name
+    assert_equal 2, finder_instantiations { @controller.loyalty(@post, :posts); @controller.loyalty(@post, "admin/posts"); @controller.loyalty(@post, :posts) }
+    assert_instance_of Admin::PostsLoyalty, @controller.loyalty(@post, "admin/posts")
+  end
+
+  def test_loyalty_class_memo_treats_symbol_and_string_names_as_the_same_key
+    assert_equal 1, finder_instantiations { @controller.loyalty(@post, :posts); @controller.loyalty(@post, "posts"); @controller.loyalty(@post) }
+  end
+
+  def test_failed_lookup_is_not_memoized
+    controller = PostsController.new(@user, { action: "show", controller: "late_defined" })
+    assert_raises(Banken::NotDefinedError) { controller.loyalty }
+
+    Object.const_set(:LateDefinedLoyalty, Class.new(ApplicationLoyalty))
+    assert_instance_of LateDefinedLoyalty, controller.loyalty
+  ensure
+    Object.send(:remove_const, :LateDefinedLoyalty) if Object.const_defined?(:LateDefinedLoyalty, false)
+  end
+
+  def test_loyalty_instances_follow_banken_user_changes_within_a_request
+    first = @controller.loyalty(@post)
+    @controller.current_user = :switched
+    second = @controller.loyalty(@post)
+
+    assert_equal @user, first.user
+    assert_equal :switched, second.user
+    refute_same first, second
+  end
+
+  def test_module_level_loyalty_bang_is_not_memoized
+    assert_equal 2, finder_instantiations { Banken.loyalty!(:posts, @user, @post); Banken.loyalty!(:posts, @user, @post) }
+  end
+
   # authorize!
 
   def test_authorize_bang_without_a_record_passes_nil_to_the_loyalty
@@ -279,4 +318,13 @@ class ControllerHelpersTest < Minitest::Test
 
     assert_kind_of Banken::Error, error
   end
+
+  private
+
+    def finder_instantiations
+      count = 0
+      original = Banken::LoyaltyFinder.method(:new)
+      Banken::LoyaltyFinder.stub(:new, ->(name) { count += 1; original.call(name) }) { yield }
+      count
+    end
 end
