@@ -106,7 +106,8 @@ module Banken
     # private) to use e.g. `record.model_name.param_key` ("admin_post").
     def banken_param_key(record)
       klass = record.is_a?(Class) ? record : record.class
-      klass.to_s.demodulize.underscore
+      name  = klass.name || raise(ArgumentError, "cannot infer a params key for an anonymous class")
+      name.demodulize.underscore
     end
 
     def banken_query_name

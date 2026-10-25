@@ -447,17 +447,18 @@ end
 `permitted_attributes` reads `params[<key>]`, where the key is the demodulized,
 underscored class name (`Post` and `Admin::Post` both give `post`). To change
 that, override one of these hooks in your controller. **Define the override
-under `private`**: a public method on a controller is a routable action.
+under `private` (or `protected`)**: a public method on a controller is a
+routable action.
 
 ```ruby
 class ApplicationController < ActionController::Base
   include Banken
 
   private
-    # Use the key Rails forms generate (Admin::Post -> "admin_post")
+    # Use the key Rails forms generate (Admin::Post -> "admin_post");
+    # model_name works on ActiveModel classes and instances alike
     def banken_param_key(record)
-      klass = record.is_a?(Class) ? record : record.class
-      klass.model_name.param_key
+      record.respond_to?(:model_name) ? record.model_name.param_key : super
     end
 
     # Or take the attributes from somewhere else entirely

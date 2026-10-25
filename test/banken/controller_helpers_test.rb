@@ -229,14 +229,33 @@ class ControllerHelpersTest < Minitest::Test
       private
 
         def banken_param_key(record)
-          klass = record.is_a?(Class) ? record : record.class
-          klass.model_name.param_key
+          record.respond_to?(:model_name) ? record.model_name.param_key : super
         end
     end
     params = ActionController::Parameters.new(controller: "admin/posts", action: "create", admin_post: { title: "Hi" }, post: { title: "wrong" })
     permitted = controller_class.new(@user, params).permitted_attributes(Admin::Post.new)
 
     assert_equal({ "title" => "Hi" }, permitted.to_h)
+  end
+
+  def test_banken_param_key_override_can_fall_back_to_the_default_with_super
+    controller_class = Class.new(PostsController) do
+      private
+
+        def banken_param_key(record)
+          record.respond_to?(:model_name) ? record.model_name.param_key : super
+        end
+    end
+    params = ActionController::Parameters.new(controller: "posts", action: "update", post: { votes: 3 })
+    permitted = controller_class.new(@user, params).permitted_attributes(@post)
+
+    assert_equal({ "votes" => 3 }, permitted.to_h)
+  end
+
+  def test_permitted_attributes_rejects_an_anonymous_class_record
+    params = ActionController::Parameters.new(controller: "posts", action: "create")
+
+    assert_raises(ArgumentError) { PostsController.new(@user, params).permitted_attributes(Class.new) }
   end
 
   def test_banken_params_for_can_be_overridden
