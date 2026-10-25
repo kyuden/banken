@@ -110,6 +110,8 @@ class GeneratorsTest < Minitest::Test
 
   private
 
+    # quiet: true suppresses say_status output, so assertions about the
+    # generator output must invoke the generator directly instead.
     def generate(generator, args)
       Dir.chdir(@tmpdir) { generator.new(args, { quiet: true }).invoke_all }
     end
