@@ -1,0 +1,10 @@
+source "https://rubygems.org"
+
+gemspec path: ".."
+
+git "https://github.com/rails/rails", branch: "main" do
+  gem "activesupport"
+  gem "actionpack"
+  gem "activemodel"
+  gem "railties"
+end

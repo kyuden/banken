@@ -24,6 +24,15 @@ In first, Look this tutorial:
 gem "banken"
 ```
 
+Supported versions (tested in CI):
+
+| Ruby | Rails |
+|---|---|
+| 3.3, 3.4, 4.0 | 7.1, 7.2, 8.0, 8.1 |
+
+Ruby versions follow the official end-of-life schedule. Environments below
+these floors stay on banken 1.0.3, which works on Rails 7.1 and older.
+
 Include Banken in your application controller:
 
 ``` ruby
