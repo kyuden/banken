@@ -1,23 +1,20 @@
 <img width="350" src="https://raw.github.com/wiki/kyuden/banken/images/banken.png">
 
 [![CI](https://github.com/kyuden/banken/actions/workflows/ci.yml/badge.svg)](https://github.com/kyuden/banken/actions/workflows/ci.yml)
-[![Code Climate](https://codeclimate.com/github/kyuden/banken/badges/gpa.svg)](https://codeclimate.com/github/kyuden/banken)
 [![Gem Version](https://badge.fury.io/rb/banken.svg)](https://badge.fury.io/rb/banken)
 
 Simple and lightweight authorization library for Rails inspired by Pundit.
 Banken provides a set of helpers which restricts what resources
 a given user is allowed to access.
 
-In first, Look this tutorial:
+Start with the tutorial:
  - [Tutorial](https://github.com/kyuden/banken/wiki/Tutorial)
  - [Tutorial (Japanese)](https://github.com/kyuden/banken/wiki/Tutorial-(japanese))
 
-========
 ## What's the difference between Banken and Pundit?
  - [The difference between Banken and Pundit](https://github.com/kyuden/banken/wiki/The-difference-between-Banken-and-Pundit)
  - [The difference between Banken and Pundit (Japanese)](https://github.com/kyuden/banken/wiki/The-difference-between-Banken-and-Pundit-(Japanese))
 
- 
 ## Installation
 
 ``` ruby
@@ -30,16 +27,16 @@ Supported versions (tested in CI):
 |---|---|
 | 3.3, 3.4, 4.0 | 7.1, 7.2, 8.0, 8.1 |
 
-Ruby versions follow the official end-of-life schedule. Environments below
-these floors stay on banken 1.0.3, which works on Rails 7.1 and older.
+Ruby versions follow the official end-of-life schedule; Rails versions that
+reached end-of-life are dropped gradually as applications move on. Environments
+below these floors stay on banken 1.0.3, which works on Rails 7.1 and older.
 
-Include Banken in your application controller:
+Include Banken in your application controller (`ActionController::API` works too):
 
 ``` ruby
 # app/controllers/application_controller.rb
 class ApplicationController < ActionController::Base
   include Banken
-  protect_from_forgery
 end
 ```
 
@@ -116,7 +113,7 @@ class PostsController < ApplicationController
     if @post.update(post_params)
       redirect_to @post
     else
-      render :edit
+      render :edit, status: 422
     end
   end
 end
@@ -132,8 +129,8 @@ and the given optional object. It then infers from the action name, that it shou
 raise "not authorized" unless PostsLoyalty.new(current_user, @post).update?
 ```
 
-If you don't have an optional object for the first argument to `authorize!`, then you can pass
-the class. For example:
+If there is no record to check, call `authorize!` without an argument (the
+loyalty then receives `nil` as its record), or pass the class. For example:
 
 Loyalty:
 ```ruby
@@ -166,14 +163,40 @@ conditionally showing links or buttons in the view:
 <% end %>
 ```
 
-If you are using namespace in your controller and policy,
-you can access the policy passing string like 'admin/posts' as a second argument.
-Below calls Admin::PostsLoyalty.
+Banken infers the loyalty from the controller path (`controller_path`) and the
+query from the action name (`action_name`). A namespaced controller such as
+`Admin::PostsController` (controller path `admin/posts`) therefore uses
+`Admin::PostsLoyalty`, which lives in `app/loyalties/admin/posts_loyalty.rb`.
+The same applies to controllers inside Rails engines: `Blorgh::PostsController`
+uses `Blorgh::PostsLoyalty`. There is no fallback to a top-level loyalty.
+
+To use another controller's loyalty, pass its controller path as the second
+argument. Below calls `Admin::PostsLoyalty`:
 
 ``` erb
 <% if loyalty(@post, 'admin/posts').update? %>
   <%= link_to "Edit post", edit_post_path(@post) %>
 <% end %>
+```
+
+Banken also works for controllers dispatched without the router
+(`PostsController.action(:index).call(env)`). In templates rendered through
+`ActionController::Renderer` (`PostsController.render ...`), `loyalty` infers
+the loyalty from the controller the renderer was called on; `authorize!` cannot
+be used there because no action is running.
+
+**Naming caveat:** `loyalty` is a public method on your controllers. Do not
+define a controller action named `loyalty`, or it will shadow the helper. The
+helper is scheduled to be renamed to `banken_loyalty` (with `loyalty` kept as an
+alias) in 2.0.
+
+## Using loyalties outside controllers
+
+`Banken.loyalty!` builds a loyalty from a controller path, a user and a record,
+for jobs, GraphQL resolvers or anywhere there is no controller:
+
+``` ruby
+Banken.loyalty!('admin/posts', user, post).update?
 ```
 
 ## Ensuring loyalties are used
@@ -211,8 +234,8 @@ end
 ```
 
 If you need to perform some more sophisticated logic or you want to raise a custom
-exception you can use the two lower level method `banken_authorization_performed?` which
-return `true` or `false` depending on whether `authorize!` have been called, respectively.
+exception you can use the lower-level method `banken_authorization_performed?`, which
+returns `true` or `false` depending on whether `authorize!` (or `skip_authorization`) has been called.
 
 ## Just plain old Ruby
 
@@ -262,14 +285,13 @@ end
 ## Rescuing a denied Authorization in Rails
 
 Banken raises a `Banken::NotAuthorizedError` you can
-[rescue_from](http://guides.rubyonrails.org/action_controller_overview.html#rescue-from)
+[rescue_from](https://guides.rubyonrails.org/action_controller_overview.html#rescue-from)
 in your `ApplicationController`. You can customize the `user_not_authorized`
 method in every controller.
 
 ```ruby
 # app/controllers/application_controller.rb
 class ApplicationController < ActionController::Base
-  protect_from_forgery
   include Banken
 
   rescue_from Banken::NotAuthorizedError, with: :user_not_authorized
@@ -278,10 +300,26 @@ class ApplicationController < ActionController::Base
 
   def user_not_authorized
     flash[:alert] = "You are not authorized to perform this action."
-    redirect_to(request.referrer || root_path)
+    redirect_back_or_to(root_path, allow_other_host: false)
   end
 end
 ```
+
+Do not redirect to `request.referrer`: the `Referer` header is controlled by
+the client. Depending on your open-redirect configuration that either sends the
+user to another site or raises `ActionController::Redirecting::UnsafeRedirectError`.
+`redirect_back_or_to` falls back to `root_path` when there is no referrer, and
+`allow_other_host: false` makes it fall back for off-site referrers too,
+whatever `raise_on_open_redirects` / `action_on_open_redirect` are set to.
+
+If you only need the status code, map the error to 403 and let Rails render it:
+
+```ruby
+# config/application.rb
+config.action_dispatch.rescue_responses["Banken::NotAuthorizedError"] = :forbidden
+```
+
+Without either, an unrescued `NotAuthorizedError` is a 500.
 
 ## Creating custom error messages
 
@@ -305,7 +343,7 @@ class ApplicationController < ActionController::Base
     loyalty_name = exception.loyalty.class.to_s.underscore
 
     flash[:error] = t "#{loyalty_name}.#{exception.query}", scope: "banken", default: :default
-    redirect_to(request.referrer || root_path)
+    redirect_back_or_to(root_path, allow_other_host: false)
   end
 end
 ```
@@ -326,11 +364,17 @@ your error messaging.
 
 In some cases your controller might not have access to `current_user`, or your
 `current_user` is not the method that should be invoked by Banken. Simply
-define a method in your controller called `banken_user`.
+define a method in your controller called `banken_user` (under `private`, so it
+does not become a routable action):
 
 ```ruby
-def banken_user
-  User.find_by_other_means
+class ApplicationController < ActionController::Base
+  include Banken
+
+  private
+    def banken_user
+      User.find_by_other_means
+    end
 end
 ```
 
@@ -375,28 +419,28 @@ class UserContext
 end
 
 # app/controllers/application_controller.rb
-class ApplicationController
+class ApplicationController < ActionController::Base
   include Banken
 
-  def banken_user
-    UserContext.new(current_user, request.ip)
-  end
+  private
+    def banken_user
+      UserContext.new(current_user, request.ip)
+    end
 end
 ```
 
 ## Strong parameters
 
-In Rails 4 (or Rails 3.2 with the
-[strong_parameters](https://github.com/rails/strong_parameters) gem),
-mass-assignment protection is handled in the controller. With Banken you can
-control which attributes a user has access to update via your loyalties. You can
-set up a `permitted_attributes` method in your loyalty like this:
+Mass-assignment protection is handled in the controller with strong
+parameters. With Banken you can control which attributes a user has access to
+update via your loyalties. You can set up a `permitted_attributes` method in
+your loyalty like this:
 
 ```ruby
 # app/loyalties/posts_loyalty.rb
 class PostsLoyalty < ApplicationLoyalty
   def permitted_attributes
-    if user.admin? || user.owner_of?(post)
+    if user.admin? || user.owner_of?(record)
       [:title, :body, :tag_list]
     else
       [:tag_list]
@@ -412,10 +456,10 @@ You can now retrieve these attributes from the loyalty:
 class PostsController < ApplicationController
   def update
     @post = Post.find(params[:id])
-    if @post.update_attributes(post_params)
+    if @post.update(post_params)
       redirect_to @post
     else
-      render :edit
+      render :edit, status: 422
     end
   end
 
@@ -435,14 +479,19 @@ The record may be an instance or a class (`permitted_attributes(Post)` on create
 class PostsController < ApplicationController
   def update
     @post = Post.find(params[:id])
-    if @post.update_attributes(permitted_attributes(@post))
+    if @post.update(permitted_attributes(@post))
       redirect_to @post
     else
-      render :edit
+      render :edit, status: 422
     end
   end
 end
 ```
+
+Attributes that the loyalty does not list are dropped like any other
+unpermitted parameter. With `config.action_controller.action_on_unpermitted_parameters = :raise`
+they raise `ActionController::UnpermittedParameters`, which Rails reports as a 500
+unless you map it in `rescue_responses`.
 
 `permitted_attributes` reads `params[<key>]`, where the key is the demodulized,
 underscored class name (`Post` and `Admin::Post` both give `post`). To change
@@ -468,6 +517,6 @@ class ApplicationController < ActionController::Base
 end
 ```
 
-# License
+## License
 
 Licensed under the MIT license, see the separate LICENSE.txt file.
