@@ -1,5 +1,10 @@
 ## Unreleased
 
+* Infer the loyalty and the query from `controller_path` and `action_name` instead of
+  `params[:controller]` / `params[:action]`, falling back to params when they are unavailable.
+  Behaviour through the router is unchanged; `authorize!` and `loyalty` now also work when a
+  controller is dispatched directly (`PostsController.action(:index).call(env)`) or rendered through
+  `ActionController::Renderer`.
 * Errors raised while a loyalty file loads (for example a `NoMethodError` from a typo in the class
   body, or a `NameError` for an unrelated constant) now propagate instead of being reported as
   `Banken::NotDefinedError`. `LoyaltyFinder` uses `safe_constantize`, so only `NameError`s that name

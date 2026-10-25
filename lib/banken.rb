@@ -77,12 +77,17 @@ module Banken
 
   private
 
+    # Rails sets action_name and controller_path on every controller; they are
+    # also available where params[:controller] is not (direct dispatch with
+    # Controller.action(...), ActionController::Renderer). action_name is nil
+    # until #process runs, so fall back to params in that case and for
+    # non-Rails hosts that only provide params.
     def banken_action_name
-      params[:action]
+      (respond_to?(:action_name) && action_name.presence) || params[:action]
     end
 
     def banken_controller_name
-      params[:controller]
+      (respond_to?(:controller_path) && controller_path.presence) || params[:controller]
     end
 
     def banken_query_name

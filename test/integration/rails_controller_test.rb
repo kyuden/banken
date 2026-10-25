@@ -281,6 +281,24 @@ class RailsControllerTest < Minitest::Test
     assert_equal "index ok", response.body
   end
 
+  # direct dispatch without the router: params[:controller] / [:action] are absent
+
+  def test_direct_dispatch_infers_from_controller_path_and_action_name
+    env = Rack::MockRequest.env_for("/anything", "banken.user" => :alice)
+    status, _headers, body = Integration::PostsController.action(:index).call(env)
+
+    assert_equal 200, status
+    assert_equal "index ok", body.each.to_a.join
+  end
+
+  def test_direct_dispatch_reports_controller_path_and_action_name_on_denial
+    env = Rack::MockRequest.env_for("/anything", "banken.user" => :alice)
+    status, _headers, body = Integration::PostsController.action(:destroy).call(env)
+
+    assert_equal 403, status
+    assert_equal "denied controller=integration/posts query=destroy? loyalty=Integration::PostsLoyalty", body.each.to_a.join
+  end
+
   # verify_authorized as after_action
 
   def test_verify_authorized_raises_when_the_action_forgot_to_authorize

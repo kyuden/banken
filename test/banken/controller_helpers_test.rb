@@ -57,14 +57,36 @@ class ControllerHelpersTest < Minitest::Test
     assert_nil @controller.loyalty.record
   end
 
-  def test_inference_reads_params_even_when_action_name_and_controller_path_exist
-    # Pins 1.0.x behaviour. 1.1.0 intends to prefer action_name/controller_path
-    # and fall back to params; when that lands this test must be inverted
-    # deliberately (expect Admin::PostsLoyalty and query "show?").
+  def test_inference_prefers_action_name_and_controller_path_over_params
+    # Inverted from the 1.0.x behaviour (params first) in 1.1.0: Rails sets
+    # action_name and controller_path on every controller, and they are also
+    # available where params[:controller] is not (direct dispatch, Renderer).
     controller = RailsLikeController.new(@user, { action: 'destroy', controller: 'posts' })
 
     error = assert_raises(Banken::NotAuthorizedError) { controller.authorize!(@post) }
-    assert_instance_of PostsLoyalty, error.loyalty
+    assert_instance_of Admin::PostsLoyalty, error.loyalty
+    assert_equal 'show?', error.query
+    assert_equal 'admin/posts', error.controller
+  end
+
+  def test_inference_falls_back_to_params_when_the_controller_has_no_action_name
+    refute_respond_to @controller, :action_name
+    @controller.params[:action] = 'destroy'
+
+    error = assert_raises(Banken::NotAuthorizedError) { @controller.authorize!(@post) }
+    assert_equal 'destroy?', error.query
+    assert_equal 'posts', error.controller
+  end
+
+  def test_inference_falls_back_to_params_when_action_name_is_nil
+    # ActionController::Metal#action_name is nil until #process runs.
+    unprocessed = Class.new(PostsController) do
+      def action_name; nil; end
+      def controller_path; nil; end
+    end
+    controller = unprocessed.new(@user, { action: 'destroy', controller: 'posts' })
+
+    error = assert_raises(Banken::NotAuthorizedError) { controller.authorize!(@post) }
     assert_equal 'destroy?', error.query
     assert_equal 'posts', error.controller
   end
