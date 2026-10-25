@@ -1,7 +1,7 @@
 require "test_helper"
 
-# Pins the surface Banken adds to a controller. Any change here is an API
-# change for every application that includes Banken and must be deliberate.
+# Pins the surface Banken::Authorization adds to a controller. Any change here
+# is an API change for every application that includes it and must be deliberate.
 class PublicApiTest < Minitest::Test
   EXPECTED_PUBLIC_METHODS = %w[
     authorize!
@@ -15,14 +15,14 @@ class PublicApiTest < Minitest::Test
   ].freeze
 
   def test_public_instance_methods_added_to_the_controller
-    assert_equal EXPECTED_PUBLIC_METHODS, Banken.public_instance_methods(false).map(&:to_s).sort
+    assert_equal EXPECTED_PUBLIC_METHODS, Banken::Authorization.public_instance_methods(false).map(&:to_s).sort
   end
 
   def test_inference_hooks_stay_private
     # Not an exhaustive list: private helpers may be added freely. These must
     # simply never become public actions.
     %i[banken_action_name banken_controller_name banken_query_name banken_params_for banken_param_key].each do |name|
-      assert_includes Banken.private_instance_methods(false), name
+      assert_includes Banken::Authorization.private_instance_methods(false), name
     end
   end
 
