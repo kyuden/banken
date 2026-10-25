@@ -298,14 +298,17 @@ class ApplicationController < ActionController::Base
 
   def user_not_authorized
     flash[:alert] = "You are not authorized to perform this action."
-    redirect_back_or_to(root_path)
+    redirect_back_or_to(root_path, allow_other_host: false)
   end
 end
 ```
 
-Use `redirect_back_or_to` (or `redirect_back fallback_location:`), not
-`redirect_to request.referrer`: the `Referer` header is controlled by the
-client, so redirecting to it is an open redirect.
+Do not redirect to `request.referrer`: the `Referer` header is controlled by
+the client. Depending on your open-redirect configuration that either sends the
+user to another site or raises `ActionController::Redirecting::UnsafeRedirectError`.
+`redirect_back_or_to` falls back to `root_path` when there is no referrer, and
+`allow_other_host: false` makes it fall back for off-site referrers too,
+whatever `raise_on_open_redirects` / `action_on_open_redirect` are set to.
 
 If you only need the status code, map the error to 403 and let Rails render it:
 
@@ -338,7 +341,7 @@ class ApplicationController < ActionController::Base
     loyalty_name = exception.loyalty.class.to_s.underscore
 
     flash[:error] = t "#{loyalty_name}.#{exception.query}", scope: "banken", default: :default
-    redirect_back_or_to(root_path)
+    redirect_back_or_to(root_path, allow_other_host: false)
   end
 end
 ```
@@ -359,11 +362,17 @@ your error messaging.
 
 In some cases your controller might not have access to `current_user`, or your
 `current_user` is not the method that should be invoked by Banken. Simply
-define a method in your controller called `banken_user`.
+define a method in your controller called `banken_user` (under `private`, so it
+does not become a routable action):
 
 ```ruby
-def banken_user
-  User.find_by_other_means
+class ApplicationController < ActionController::Base
+  include Banken
+
+  private
+    def banken_user
+      User.find_by_other_means
+    end
 end
 ```
 
@@ -408,12 +417,13 @@ class UserContext
 end
 
 # app/controllers/application_controller.rb
-class ApplicationController
+class ApplicationController < ActionController::Base
   include Banken
 
-  def banken_user
-    UserContext.new(current_user, request.ip)
-  end
+  private
+    def banken_user
+      UserContext.new(current_user, request.ip)
+    end
 end
 ```
 
@@ -428,7 +438,7 @@ your loyalty like this:
 # app/loyalties/posts_loyalty.rb
 class PostsLoyalty < ApplicationLoyalty
   def permitted_attributes
-    if user.admin? || user.owner_of?(post)
+    if user.admin? || user.owner_of?(record)
       [:title, :body, :tag_list]
     else
       [:tag_list]
