@@ -209,6 +209,50 @@ class ControllerHelpersTest < Minitest::Test
     assert_equal({ 'title' => 'Hi' }, permitted.to_h)
   end
 
+  def test_permitted_attributes_accepts_a_class_record
+    # README: "If you do not have an object ... you can pass the class."
+    params = ActionController::Parameters.new(controller: "posts", action: "create", post: { title: "Hi", votes: 1, admin: true })
+    permitted = PostsController.new(@user, params).permitted_attributes(Post)
+
+    assert_equal({ "votes" => 1 }, permitted.to_h)
+  end
+
+  def test_permitted_attributes_never_reads_a_params_key_named_class
+    params = ActionController::Parameters.new(controller: "posts", action: "create", class: { votes: 99 }, post: { votes: 1 })
+    permitted = PostsController.new(@user, params).permitted_attributes(Post)
+
+    assert_equal({ "votes" => 1 }, permitted.to_h)
+  end
+
+  def test_banken_param_key_can_be_overridden_to_use_model_name
+    controller_class = Class.new(PostsController) do
+      private
+
+        def banken_param_key(record)
+          klass = record.is_a?(Class) ? record : record.class
+          klass.model_name.param_key
+        end
+    end
+    params = ActionController::Parameters.new(controller: "admin/posts", action: "create", admin_post: { title: "Hi" }, post: { title: "wrong" })
+    permitted = controller_class.new(@user, params).permitted_attributes(Admin::Post.new)
+
+    assert_equal({ "title" => "Hi" }, permitted.to_h)
+  end
+
+  def test_banken_params_for_can_be_overridden
+    controller_class = Class.new(PostsController) do
+      private
+
+        def banken_params_for(record)
+          params.fetch(:payload)
+        end
+    end
+    params = ActionController::Parameters.new(controller: "posts", action: "update", payload: { title: "Hi", votes: 2, admin: true })
+    permitted = controller_class.new(@user, params).permitted_attributes(@post)
+
+    assert_equal({ "title" => "Hi", "votes" => 2 }, permitted.to_h)
+  end
+
   # verify_authorized
 
   def test_verify_authorized_error_is_a_banken_error

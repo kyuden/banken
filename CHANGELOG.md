@@ -1,5 +1,9 @@
 ## Unreleased
 
+* `permitted_attributes` accepts a class as the record (`permitted_attributes(Post)` reads
+  `params[:post]`; it used to read `params[:class]`). Two private hooks can be overridden in the
+  controller: `banken_param_key(record)` (defaults to the demodulized, underscored class name) and
+  `banken_params_for(record)` (defaults to `params.require(banken_param_key(record))`).
 * Infer the loyalty and the query from `controller_path` and `action_name` instead of
   `params[:controller]` / `params[:action]`, falling back to params only when they are unavailable.
   Routed requests behave as before unless the controller overrides `self.controller_path`, in which

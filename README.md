@@ -427,7 +427,8 @@ class PostsController < ApplicationController
 end
 ```
 
-However, this is a bit cumbersome, so Banken provides a convenient helper method:
+However, this is a bit cumbersome, so Banken provides a convenient helper method.
+The record may be an instance or a class (`permitted_attributes(Post)` on create):
 
 ```ruby
 # app/controllers/posts_controller.rb
@@ -440,6 +441,29 @@ class PostsController < ApplicationController
       render :edit
     end
   end
+end
+```
+
+`permitted_attributes` reads `params[<key>]`, where the key is the demodulized,
+underscored class name (`Post` and `Admin::Post` both give `post`). To change
+that, override one of these hooks in your controller. **Define the override
+under `private`**: a public method on a controller is a routable action.
+
+```ruby
+class ApplicationController < ActionController::Base
+  include Banken
+
+  private
+    # Use the key Rails forms generate (Admin::Post -> "admin_post")
+    def banken_param_key(record)
+      klass = record.is_a?(Class) ? record : record.class
+      klass.model_name.param_key
+    end
+
+    # Or take the attributes from somewhere else entirely
+    def banken_params_for(record)
+      params.require(:payload)
+    end
 end
 ```
 

@@ -23,8 +23,9 @@ class PostsLoyalty < ApplicationLoyalty
     :yes
   end
 
+  # The record may be a class (permitted_attributes(Post) on create).
   def permitted_attributes
-    if record.user == user
+    if record.is_a?(Post) && record.user == user
       [:title, :votes]
     else
       [:votes]

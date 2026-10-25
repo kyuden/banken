@@ -44,8 +44,7 @@ module Banken
   end
 
   def permitted_attributes(record)
-    name = record.class.to_s.demodulize.underscore
-    params.require(name).permit(loyalty(record).permitted_attributes)
+    banken_params_for(record).permit(loyalty(record).permitted_attributes)
   end
 
   def loyalty(record=nil, controller_name=nil)
@@ -94,6 +93,20 @@ module Banken
 
     def banken_controller_name
       (respond_to?(:controller_path) && controller_path.presence) || params[:controller]
+    end
+
+    # The parameters that hold the attributes of `record`, before filtering.
+    # Override (keep it private) to read them from somewhere else.
+    def banken_params_for(record)
+      params.require(banken_param_key(record))
+    end
+
+    # The params key for `record`, which may be an instance or a class:
+    # Post / Post.new -> "post", Admin::Post -> "post". Override (keep it
+    # private) to use e.g. `record.model_name.param_key` ("admin_post").
+    def banken_param_key(record)
+      klass = record.is_a?(Class) ? record : record.class
+      klass.to_s.demodulize.underscore
     end
 
     def banken_query_name
