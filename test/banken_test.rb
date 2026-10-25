@@ -51,11 +51,15 @@ class BankenTest < Minitest::Test
 
   def test_banken_loyalty_authorized_is_true_when_authorized
     @posts_controller.authorize!(@post)
-    assert_equal true, @posts_controller.banken_loyalty_authorized?
+    Banken.deprecator.silence do
+      assert_equal true, @posts_controller.banken_loyalty_authorized?
+    end
   end
 
   def test_banken_loyalty_authorized_is_false_when_not_authorized
-    assert_equal false, @posts_controller.banken_loyalty_authorized?
+    Banken.deprecator.silence do
+      assert_equal false, @posts_controller.banken_loyalty_authorized?
+    end
   end
 
   def test_banken_loyalty_authorized_outputs_deprecation_warning

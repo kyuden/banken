@@ -5,6 +5,8 @@ require "active_support/core_ext/module/introspection"
 require "banken/version"
 require "banken/error"
 require "banken/loyalty_finder"
+require "banken/deprecator"
+require "banken/railtie" if defined?(::Rails::Railtie)
 
 module Banken
   extend ActiveSupport::Concern
@@ -69,7 +71,7 @@ module Banken
 
   # @deprecated Use banken_authorization_performed? instead.
   def banken_loyalty_authorized?
-    ActiveSupport::Deprecation.warn('banken_loyalty_authorized? is deprecated, use banken_authorization_performed? instead.')
+    Banken.deprecator.warn('banken_loyalty_authorized? is deprecated, use banken_authorization_performed? instead.')
     banken_authorization_performed?
   end
 

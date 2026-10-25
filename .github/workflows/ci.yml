@@ -13,10 +13,7 @@ jobs:
   test:
     name: Ruby ${{ matrix.ruby }} / Rails ${{ matrix.rails }}
     runs-on: ubuntu-latest
-    # Rails >= 7.2 removed the ActiveSupport::Deprecation singleton, which
-    # `banken_loyalty_authorized?` still calls. Those jobs are allowed to fail
-    # until that is fixed in a follow-up PR. Ruby head and Rails main are
-    # early-warning jobs and are always allowed to fail.
+    # Ruby head and Rails main are early-warning jobs and are allowed to fail.
     continue-on-error: ${{ matrix.allow-failure || false }}
     strategy:
       fail-fast: false
@@ -24,12 +21,6 @@ jobs:
         ruby: ["3.3", "3.4", "4.0"]
         rails: ["7.1", "7.2", "8.0", "8.1"]
         include:
-          - rails: "7.2"
-            allow-failure: true
-          - rails: "8.0"
-            allow-failure: true
-          - rails: "8.1"
-            allow-failure: true
           - ruby: "head"
             rails: "8.1"
             allow-failure: true

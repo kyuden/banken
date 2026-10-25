@@ -30,6 +30,10 @@ class PublicApiTest < Minitest::Test
     assert_respond_to Banken, :loyalty!
   end
 
+  def test_module_level_deprecator_is_public_api
+    assert_respond_to Banken, :deprecator
+  end
+
   def test_version_is_a_gem_version_string
     assert_match(/\A\d+\.\d+\.\d+\z/, Banken::VERSION)
   end
