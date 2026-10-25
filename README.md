@@ -285,11 +285,12 @@ end
 
 ## Creating custom error messages
 
-`NotAuthorizedError`s provide information on what query (e.g. `:create?`), what
-controller (e.g. `PostsController`), and what loyalty (e.g. an instance of
-`PostsLoyalty`) caused the error to be raised.
+`NotAuthorizedError`s provide information on what query (e.g. `"create?"`), what
+controller (the controller path, e.g. `"posts"` or `"admin/posts"`), and what
+loyalty (e.g. an instance of `PostsLoyalty`) caused the error to be raised. The
+default message names only these, never the user or the record.
 
-One way to use these `query`, `record`, and `loyalty` properties is to connect
+One way to use these `query`, `controller`, and `loyalty` properties is to connect
 them with `I18n` to generate error messages. Here's how you might go about doing
 that.
 
