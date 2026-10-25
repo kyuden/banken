@@ -13,6 +13,16 @@ class PostsLoyalty < ApplicationLoyalty
     true
   end
 
+  # Returns nil rather than false: authorize! must still deny.
+  def archive?
+    nil
+  end
+
+  # Returns a truthy non-boolean: authorize! must allow.
+  def publish?
+    :yes
+  end
+
   def permitted_attributes
     if record.user == user
       [:title, :votes]
