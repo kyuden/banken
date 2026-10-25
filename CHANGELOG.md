@@ -1,5 +1,8 @@
 ## Unreleased
 
+* Fix `banken_loyalty_authorized?` raising `NoMethodError` on Rails >= 7.2. Deprecation warnings now go
+  through `Banken.deprecator`, which `Banken::Railtie` registers with `Rails.application.deprecators`, so
+  `config.active_support.deprecation` applies to Banken.
 * Require Ruby >= 3.3 and Rails (Active Support) >= 7.1. Older versions keep using 1.0.3.
   Supported matrix: Ruby 3.3 / 3.4 / 4.0 x Rails 7.1 / 7.2 / 8.0 / 8.1.
 
