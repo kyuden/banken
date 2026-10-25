@@ -20,7 +20,8 @@ Gem::Specification.new do |spec|
     "rubygems_mfa_required" => "true"
   }
 
-  spec.files         = Dir["lib/**/*", "lib/**/USAGE"] + %w[README.md CHANGELOG.md LICENSE.txt]
+  spec.files         = Dir.glob("lib/**/*", base: __dir__).select { |f| File.file?(File.join(__dir__, f)) } +
+                       %w[README.md CHANGELOG.md LICENSE.txt]
   spec.require_paths = ["lib"]
   spec.required_ruby_version = ">= 3.3"
 

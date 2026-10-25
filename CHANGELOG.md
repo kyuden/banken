@@ -1,5 +1,8 @@
 ## Unreleased
 
+* Packaging: the gem ships only `lib/`, README, CHANGELOG and LICENSE (no more Gemfile, Rakefile,
+  gemfiles/ or CI config); `rubygems_mfa_required` is set, so publishing needs MFA; banken no longer
+  requires `active_support/core_ext/module/introspection`, which it never used.
 * `rails g banken:loyalty` no longer prints `error  test_unit [not found]` (or `rspec [not found]`): the
   generator asked the configured test framework for a `loyalty` generator that Banken never shipped.
   It now only creates the loyalty file; a `--test-framework` option is ignored if passed. Apps that
@@ -26,7 +29,7 @@
 * Errors raised while a loyalty file loads (for example a `NoMethodError` from a typo in the class
   body, or a `NameError` for an unrelated constant) now propagate instead of being reported as
   `Banken::NotDefinedError`. `LoyaltyFinder` uses `safe_constantize`, so only `NameError`s that name
-  the loyalty constant or one of its namespaces (including Zeitwerk\x27s "expected file to define
+  the loyalty constant or one of its namespaces (including Zeitwerk's "expected file to define
   constant" error for a file that defines the wrong constant name) still surface as `NotDefinedError`.
   The `NotDefinedError` message now also names the file expected to define the loyalty.
 * Security: the default `Banken::NotAuthorizedError` message no longer embeds `loyalty.inspect`, which
@@ -44,18 +47,19 @@
 
 ## 1.0.3 (2019-01-14)
 
-* Renamed `banken_loyalty_authorized?` to `banken_authorization_performed?`; the old name warns and
-  will be removed in 2.0 (okuramasafumi)
-* `LoyaltyFinder` rejects a nil controller name instead of crashing
+* Renamed `banken_loyalty_authorized?` to `banken_authorization_performed?`; the old name emits a
+  deprecation warning (okuramasafumi)
 * README: how to call a namespaced loyalty from a view (`loyalty(@post, 'admin/posts')`)
 
 ## 1.0.2 (2016-01-30)
 
-* Removed the per-controller loyalty cache introduced in 1.0.1 (it was keyed by record only)
+* Removed the loyalty cache and the public `loyalties` method; `loyalty` builds a new instance on every
+  call (the 1.0.1 cache ignored the controller name)
 
 ## 1.0.1 (2016-01-30)
 
-* Fixed `loyalty` returning the same instance for different records (#1, tkawa)
+* Fixed `loyalty` returning the same instance for different records: the cache, keyed per controller
+  since 1.0.0, is now keyed by record (#1, tkawa)
 
 ## 1.0.0 (2015-12-05)
 

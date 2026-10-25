@@ -1,5 +1,6 @@
 require "test_helper"
 require "rubygems"
+require "tmpdir"
 
 class GemspecTest < Minitest::Test
   SPEC = Gem::Specification.load(File.expand_path("../banken.gemspec", __dir__))
@@ -7,6 +8,17 @@ class GemspecTest < Minitest::Test
   def test_packages_only_the_library_and_top_level_docs
     SPEC.files.each do |file|
       assert file.start_with?("lib/") || %w[README.md CHANGELOG.md LICENSE.txt].include?(file), "unexpected file in gem: #{file}"
+    end
+  end
+
+  def test_packages_files_only_never_directories
+    SPEC.files.each { |file| assert File.file?(File.expand_path("../#{file}", __dir__)), "not a file: #{file}" }
+  end
+
+  def test_file_list_does_not_depend_on_the_working_directory
+    Dir.chdir(Dir.tmpdir) do
+      spec = Gem::Specification.load(File.expand_path("../banken.gemspec", __dir__))
+      assert_includes spec.files, "lib/banken.rb"
     end
   end
 
