@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Banken
   class Railtie < ::Rails::Railtie
     initializer "banken.deprecator" do |app|

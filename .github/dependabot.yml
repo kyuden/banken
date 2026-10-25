@@ -1,0 +1,15 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+  - package-ecosystem: bundler
+    directory: "/"
+    schedule:
+      interval: weekly
+    ignore:
+      # minitest 6 moved Minitest::Mock / #stub into the separate minitest-mock
+      # gem; the suite relies on them and pins minitest ~> 5.0.
+      - dependency-name: minitest
+        update-types: ["version-update:semver-major"]

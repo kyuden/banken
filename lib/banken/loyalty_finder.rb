@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Banken
   class LoyaltyFinder
     SUFFIX = "Loyalty"
@@ -12,7 +14,7 @@ module Banken
     #
     # `safe_constantize` only swallows NameErrors whose name matches a segment
     # of the loyalty name (or that carry no name at all); this includes
-    # Zeitwerk\x27s "expected file to define constant" error. Any other error
+    # Zeitwerk's "expected file to define constant" error. Any other error
     # raised while the loyalty file loads, such as a NoMethodError from a typo
     # in the class body, propagates so the real bug is visible.
     def loyalty

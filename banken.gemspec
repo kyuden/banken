@@ -1,7 +1,6 @@
-# coding: utf-8
-lib = File.expand_path('../lib', __FILE__)
-$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'banken/version'
+# frozen_string_literal: true
+
+require_relative "lib/banken/version"
 
 Gem::Specification.new do |spec|
   spec.name          = "banken"
@@ -9,13 +8,20 @@ Gem::Specification.new do |spec|
   spec.authors       = ["kyuden"]
   spec.email         = ["msmsms.um@gmail.com"]
 
-  spec.summary       = %q{Simple and lightweight authorization solution for Rails.}
-  spec.description   = %q{Banken provides a set of helpers which restricts what resources a given user is allowed to access.}
+  spec.summary       = "Simple and lightweight authorization solution for Rails."
+  spec.description   = "Banken provides a set of helpers which restricts what resources a given user is allowed to access."
   spec.homepage      = "https://github.com/kyuden/banken"
   spec.license       = "MIT"
 
-  spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
-  spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
+  spec.metadata = {
+    "source_code_uri"       => spec.homepage,
+    "changelog_uri"         => "#{spec.homepage}/blob/master/CHANGELOG.md",
+    "bug_tracker_uri"       => "#{spec.homepage}/issues",
+    "rubygems_mfa_required" => "true"
+  }
+
+  spec.files         = Dir.glob("lib/**/*", base: __dir__).select { |f| File.file?(File.join(__dir__, f)) } +
+                       %w[README.md CHANGELOG.md LICENSE.txt]
   spec.require_paths = ["lib"]
   spec.required_ruby_version = ">= 3.3"
 
@@ -25,7 +31,6 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "actionpack", ">= 7.1"
   spec.add_development_dependency "railties", ">= 7.1"
   spec.add_development_dependency "minitest", "~> 5.0"
-  spec.add_development_dependency "pry"
   spec.add_development_dependency "rake"
   spec.add_development_dependency "yard"
 end

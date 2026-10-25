@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Banken
   class Error < StandardError; end
 
@@ -33,5 +35,6 @@ module Banken
   class NotDefinedError < Error; end
   class AuthorizationNotPerformedError < Error; end
 
+  # Unused: Banken has no scope feature. Kept for compatibility, removed in 2.0.
   class LoyaltyScopingNotPerformedError < AuthorizationNotPerformedError; end
 end
