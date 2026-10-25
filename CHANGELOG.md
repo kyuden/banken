@@ -1,5 +1,20 @@
 ## Unreleased
 
+* Security: `authorize!` only consults queries defined by the loyalty itself (or a module or superclass
+  below `Object`). ActiveSupport defines `present?` and `duplicable?` on every object and both return
+  `true`, so an action named `present` or `duplicable` passed `authorize!` with a loyalty that defined
+  nothing. Such queries, and undefined ones, now raise `Banken::NotDefinedError` (undefined queries used
+  to raise `NoMethodError`).
+* Security: on a Rails controller, `params[:controller]` / `params[:action]` are never consulted any
+  more. Anonymous controllers (`controller_path` nil) used to fall back to `params[:controller]`,
+  which comes from the query string there, letting a request choose the loyalty. They now raise
+  `NotDefinedError`; pass the controller name to `loyalty` explicitly.
+* `permitted_attributes` raises `ActionController::ParameterMissing` (400) when the params value is a
+  scalar or an array instead of failing with `NoMethodError` (500).
+* README: `after_action :verify_authorized` without `except: :index` (Banken has no scopes); the
+  `UserContext` example returns nil for anonymous requests so a "must be logged in" guard still works;
+  notes that queries must return booleans and that `permitted_attributes` uses the current controller's
+  loyalty; never pass request data as the controller name to `loyalty`.
 * Banken's helpers (`authorize!`, `loyalty`, `skip_authorization`, `verify_authorized`, `banken_user`,
   `permitted_attributes`, `banken_authorization_performed?`, `banken_loyalty_authorized?`) are excluded
   from the controller's `action_methods`, so routes with a dynamic `:action` segment can no longer

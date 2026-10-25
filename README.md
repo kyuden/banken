@@ -191,6 +191,14 @@ Banken also works for controllers dispatched without the router
 the loyalty from the controller the renderer was called on; `authorize!` cannot
 be used there because no action is running.
 
+A query is only consulted if the loyalty (or a module or superclass of it)
+defines it; methods every Ruby object has, such as `present?`, do not count, and
+an undefined query raises `Banken::NotDefinedError`. Return `true` or `false`
+from queries: any truthy value authorizes.
+
+The second argument of `loyalty` must come from your code, never from the
+request: it selects which loyalty class is instantiated.
+
 **Naming caveat:** `loyalty` is a public method on your controllers. Do not
 define a controller action named `loyalty`, or it will shadow the helper. The
 helper is scheduled to be renamed to `banken_loyalty` (with `loyalty` kept as an
@@ -215,9 +223,14 @@ forgotten to authorize the action. For example:
 ``` ruby
 # app/controllers/application_controller.rb
 class ApplicationController < ActionController::Base
-  after_action :verify_authorized, except: :index
+  after_action :verify_authorized
 end
 ```
+
+`verify_authorized` runs after the action, so it is a development-time safety
+net that turns a forgotten `authorize!` into an error; it does not stop the
+action from running. Do not exempt `index`: Banken has no scope feature, so an
+index action needs `authorize!` like any other.
 
 
 If you're using `verify_authorized` in your controllers but need to
@@ -435,8 +448,11 @@ class ApplicationController < ActionController::Base
   include Banken::Authorization
 
   private
+    # Return nil when nobody is signed in, so a "must be logged in" guard in
+    # ApplicationLoyalty#initialize keeps working; inside loyalties check
+    # `user.user`, not `user`, which is the wrapper.
     def banken_user
-      UserContext.new(current_user, request.ip)
+      UserContext.new(current_user, request.remote_ip) if current_user
     end
 end
 ```
@@ -504,6 +520,11 @@ Attributes that the loyalty does not list are dropped like any other
 unpermitted parameter. With `config.action_controller.action_on_unpermitted_parameters = :raise`
 they raise `ActionController::UnpermittedParameters`, which Rails reports as a 500
 unless you map it in `rescue_responses`.
+
+`permitted_attributes(record)` always uses the current controller's loyalty
+(`PostsLoyalty` inside `PostsController`, even for `permitted_attributes(@comment)`)
+and expects `params[<key>]` to be a hash of attributes; a scalar or array value is
+rejected with `ActionController::ParameterMissing` (400).
 
 `permitted_attributes` reads `params[<key>]`, where the key is the demodulized,
 underscored class name (`Post` and `Admin::Post` both give `post`). To change

@@ -110,9 +110,9 @@ class BankenTest < Minitest::Test
     assert_raises(Banken::NotDefinedError) { @posts_controller.authorize!(@article) }
   end
 
-  def test_authorize_bang_raises_no_method_error_when_action_is_missing_in_loyalty
+  def test_authorize_bang_raises_not_defined_error_when_action_is_missing_in_loyalty
     @posts_controller.params[:action] = 'update_all'
-    assert_raises(NoMethodError) { @posts_controller.authorize!(@post) }
+    assert_raises(Banken::NotDefinedError) { @posts_controller.authorize!(@post) }
   end
 
   # #banken_user

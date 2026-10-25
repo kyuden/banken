@@ -41,15 +41,23 @@ module Banken
       @_banken_authorization_performed = true
 
       loyalty = loyalty(record)
-      unless loyalty.public_send(banken_query_name)
-        raise Banken::NotAuthorizedError.new(controller: banken_controller_name, query: banken_query_name, loyalty: loyalty)
+      query   = banken_query_name
+      banken_verify_query_defined!(loyalty, query)
+
+      unless loyalty.public_send(query)
+        raise Banken::NotAuthorizedError.new(controller: banken_controller_name, query: query, loyalty: loyalty)
       end
 
       true
     end
 
     def permitted_attributes(record)
-      banken_params_for(record).permit(loyalty(record).permitted_attributes)
+      attributes = banken_params_for(record)
+      unless attributes.respond_to?(:permit)
+        # A scalar or an array where a hash of attributes was expected.
+        raise ActionController::ParameterMissing, banken_param_key(record)
+      end
+      attributes.permit(loyalty(record).permitted_attributes)
     end
 
     def loyalty(record=nil, controller_name=nil)
@@ -90,21 +98,41 @@ module Banken
 
       # Rails sets action_name and controller_path on every controller and, unlike
       # params[:controller] / params[:action], they cannot be supplied by the
-      # request: for routes that target an endpoint directly
-      # (`get "/x" => PostsController.action(:destroy)`, `mount`) the path
-      # parameters carry no controller or action, so params would come from the
-      # query string. They are also available where params are not, such as a
-      # controller dispatched with Controller.action(...).call(env) and views
-      # rendered through ActionController::Renderer (controller_path only; there
-      # is no action there). params remain the fallback for non-Rails hosts that
-      # only provide params, for action_name being nil before #process runs, and
-      # for anonymous controllers whose controller_path is nil.
+      # request. On a Rails controller only those are consulted: for routes that
+      # target an endpoint directly (`get "/x" => PostsController.action(:destroy)`,
+      # `mount`) and for anonymous controllers the path parameters carry no
+      # controller or action, and reading params there would let the query
+      # string choose the loyalty. params are the source only for hosts that do
+      # not provide action_name / controller_path at all (plain Ruby objects).
       def banken_action_name
-        (respond_to?(:action_name) && action_name.presence) || params[:action]
+        if respond_to?(:action_name)
+          action_name.presence
+        else
+          params[:action]
+        end
       end
 
       def banken_controller_name
-        (respond_to?(:controller_path) && controller_path.presence) || params[:controller]
+        if respond_to?(:controller_path)
+          controller_path.presence || raise(Banken::NotDefinedError, "#{self.class} has no controller_path (anonymous controller?); pass the controller name to loyalty explicitly")
+        else
+          params[:controller]
+        end
+      end
+
+      # A query must be defined by the loyalty itself (or a module/superclass
+      # of it below Object). ActiveSupport defines `present?` and `duplicable?`
+      # on every object and both return true, so an action named `present`
+      # would otherwise authorize everyone. Undefined queries raise
+      # NotDefinedError instead of NoMethodError.
+      def banken_verify_query_defined!(loyalty, query)
+        if loyalty.respond_to?(query)
+          owner = loyalty.method(query).owner
+          return unless Object.ancestors.include?(owner)
+          raise Banken::NotDefinedError, "#{loyalty.class}##{query} is not defined by the loyalty (inherited from #{owner})"
+        end
+
+        raise Banken::NotDefinedError, "#{loyalty.class}##{query} is not defined"
       end
 
       # Resolving a loyalty class means camelizing and constantizing the controller
@@ -119,7 +147,8 @@ module Banken
       end
 
       # The parameters that hold the attributes of `record`, before filtering.
-      # Override (keep it private) to read them from somewhere else.
+      # Override (keep it private) to read them from somewhere else; return an
+      # ActionController::Parameters.
       def banken_params_for(record)
         params.require(banken_param_key(record))
       end

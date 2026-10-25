@@ -53,6 +53,65 @@ class HardeningTest < Minitest::Test
     assert_equal "nope", error.message
   end
 
+  # queries must be defined by the loyalty, never inherited from Object
+
+  def test_authorize_bang_denies_actions_that_match_predicates_every_object_has
+    # ActiveSupport defines present? and duplicable? on Object and both return true.
+    %w[present duplicable nil frozen].each do |action|
+      controller = PostsController.new(@user, { action: action, controller: 'posts' })
+      error = assert_raises(Banken::NotDefinedError, "action #{action}") { controller.authorize!(@post) }
+      assert_includes error.message, "PostsLoyalty##{action}?"
+    end
+  end
+
+  def test_authorize_bang_raises_not_defined_error_for_an_undefined_query
+    @controller.params[:action] = 'update_all'
+    error = assert_raises(Banken::NotDefinedError) { @controller.authorize!(@post) }
+
+    assert_equal "PostsLoyalty#update_all? is not defined", error.message
+  end
+
+  def test_authorize_bang_accepts_queries_defined_in_a_loyalty_module_or_superclass
+    assert_equal true, PostsController.new(@user, { action: 'show', controller: 'posts' }).authorize!(@post)
+  end
+
+  # on a Rails controller, params never substitute for action_name / controller_path
+
+  def test_rails_hosts_do_not_fall_back_to_params_for_the_controller_name
+    anonymous = Class.new(PostsController) do
+      def action_name; "index"; end
+      def controller_path; nil; end
+    end
+    controller = anonymous.new(@user, { action: "index", controller: "posts" })
+    error = assert_raises(Banken::NotDefinedError) { controller.loyalty }
+
+    assert_includes error.message, "no controller_path"
+  end
+
+  def test_rails_hosts_do_not_fall_back_to_params_for_the_action_name
+    unprocessed = Class.new(PostsController) do
+      def action_name; nil; end
+      def controller_path; "posts"; end
+    end
+    controller = unprocessed.new(@user, { action: "destroy", controller: "posts" })
+
+    assert_raises(Banken::Error) { controller.authorize!(@post) }
+  end
+
+  # permitted_attributes with a scalar or array value is a 400, not a 500
+
+  def test_permitted_attributes_raises_parameter_missing_for_a_scalar_value
+    params = ActionController::Parameters.new(controller: "posts", action: "update", post: "scalar")
+
+    assert_raises(ActionController::ParameterMissing) { PostsController.new(@user, params).permitted_attributes(@post) }
+  end
+
+  def test_permitted_attributes_raises_parameter_missing_for_an_array_value
+    params = ActionController::Parameters.new(controller: "posts", action: "update", post: ["a", "b"])
+
+    assert_raises(ActionController::ParameterMissing) { PostsController.new(@user, params).permitted_attributes(@post) }
+  end
+
   # the helper names are known
 
   def test_hidden_actions_lists_every_public_helper
