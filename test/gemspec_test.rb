@@ -7,7 +7,7 @@ class GemspecTest < Minitest::Test
 
   def test_packages_only_the_library_and_top_level_docs
     SPEC.files.each do |file|
-      assert file.start_with?("lib/") || %w[README.md CHANGELOG.md LICENSE.txt].include?(file), "unexpected file in gem: #{file}"
+      assert file.start_with?("lib/") || %w[README.md CHANGELOG.md LICENSE.txt SECURITY.md].include?(file), "unexpected file in gem: #{file}"
     end
   end
 

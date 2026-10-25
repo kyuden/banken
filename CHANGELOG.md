@@ -1,5 +1,10 @@
 ## Unreleased
 
+* Documentation: README rewritten for Rails 7.1+ (`update` instead of `update_attributes`, no
+  Rails 4 / strong_parameters notes), the `rescue_from` examples use `redirect_back_or_to` instead of
+  redirecting to the `Referer` header (an open redirect), `rescue_responses` documented as an
+  alternative, inference from `controller_path` / `action_name` explained, naming caveat for an
+  action called `loyalty`, `Banken.loyalty!` for use outside controllers. Added SECURITY.md.
 * Packaging: the gem ships only `lib/`, README, CHANGELOG and LICENSE (no more Gemfile, Rakefile,
   gemfiles/ or CI config); `rubygems_mfa_required` is set, so publishing needs MFA; banken no longer
   requires `active_support/core_ext/module/introspection`, which it never used.
