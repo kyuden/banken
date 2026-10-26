@@ -339,7 +339,9 @@ If you only need the status code, map the error to 403 and let Rails render it:
 config.action_dispatch.rescue_responses["Banken::NotAuthorizedError"] = :forbidden
 ```
 
-Without either, an unrescued `NotAuthorizedError` is a 500.
+Without either, an unrescued `NotAuthorizedError` is a 500. `rescue_responses`
+matches exact class names, so a mapping for `Banken::NotDefinedError` does not
+cover `Banken::QueryNotDefinedError`; `rescue_from Banken::NotDefinedError` does.
 
 ## Creating custom error messages
 
@@ -410,7 +412,8 @@ Banken reports its own deprecations through `Banken.deprecator`, an
 `ActiveSupport::Deprecation` instance. When banken is loaded by Bundler in the
 usual way (after `require "rails/all"`), `Banken::Railtie` registers it with
 `Rails.application.deprecators`, so `config.active_support.deprecation` and
-`config.active_support.report_deprecations` apply to Banken as well. If you
+`config.active_support.report_deprecations` apply to Banken as well (with the
+`:notify` behaviour the events are published as `deprecation.banken`). If you
 require banken only after Rails has initialized, register it yourself:
 
 ```ruby
