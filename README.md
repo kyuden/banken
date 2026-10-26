@@ -401,6 +401,12 @@ class ApplicationController < ActionController::Base
 end
 ```
 
+Define `banken_user` in the controller class itself (or in a module included
+*after* `Banken::Authorization`): a module included before it is shadowed by
+Banken's default, which silently keeps calling `current_user`. The loyalty is
+built fresh with the current `banken_user` on every call, so changing the user
+mid-request needs no reset.
+
 Banken keeps its own helpers (`authorize!`, `loyalty`, `banken_user`,
 `skip_authorization`, `verify_authorized`, `permitted_attributes`, ...) out of
 the controller's `action_methods`, so a wildcard route cannot dispatch to them
@@ -530,11 +536,17 @@ unless you map it in `rescue_responses`.
 and expects `params[<key>]` to be a hash of attributes; a scalar or array value is
 rejected with `ActionController::ParameterMissing` (400).
 
+The list may contain hash filters for arrays and nested attributes, exactly as
+`permit` accepts them: `[:title, { tags: [] }, { meta: [:key] }]`.
+
 `permitted_attributes` reads `params[<key>]`, where the key is the demodulized,
-underscored class name (`Post` and `Admin::Post` both give `post`). To change
-that, override one of these hooks in your controller. **Define the override
-under `private` (or `protected`)**: a public method on a controller is a
-routable action.
+underscored class name (`Post` and `Admin::Post` both give `post`). Rails forms
+use `model_name.param_key` instead, so a namespaced model (`Admin::Post` is
+posted as `params[:admin_post]`) or a model overriding `model_name` needs the
+`banken_param_key` override below, or every submit ends in
+`ActionController::ParameterMissing`. To change the key, override one of these
+hooks in your controller. **Define the override under `private` (or
+`protected`)**: a public method on a controller is a routable action.
 
 ```ruby
 class ApplicationController < ActionController::Base
