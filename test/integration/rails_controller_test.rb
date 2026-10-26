@@ -116,6 +116,11 @@ module Integration
       render plain: "forgot to authorize"
     end
 
+    def present
+      authorize!(find_post)
+      render plain: "presented"
+    end
+
     def inline_view
       skip_authorization
       @post = find_post
@@ -307,6 +312,43 @@ class RailsControllerTest < Minitest::Test
 
     assert_equal 403, response.status
     assert_equal "denied controller=integration/posts query=destroy? loyalty=Integration::PostsLoyalty", response.body
+  end
+
+  def test_anonymous_controllers_cannot_have_their_loyalty_chosen_through_the_query_string
+    anonymous = Class.new(Integration::ApplicationController) { def index; authorize!; render plain: "never"; end }
+    env = Rack::MockRequest.env_for("/anon?controller=integration/posts&action=index", "banken.user" => :alice)
+
+    assert_raises(Banken::NotDefinedError) { anonymous.action(:index).call(env) }
+  end
+
+  def test_an_action_named_after_an_object_predicate_is_denied
+    env = Rack::MockRequest.env_for("/anything", "banken.user" => :alice)
+
+    assert_raises(Banken::NotDefinedError) { Integration::PostsController.action(:present).call(env) }
+  end
+
+  # Banken helpers must not be routable actions
+
+  def test_banken_helpers_are_not_controller_actions
+    actions = Integration::PostsController.action_methods
+
+    Banken::Authorization::HIDDEN_ACTIONS.each { |name| refute_includes actions, name, "#{name} must not be an action" }
+    assert_includes actions, "index"
+    refute Integration::PostsController.new.available_action?("skip_authorization")
+  end
+
+  def test_action_methods_still_pick_up_newly_defined_actions
+    klass = Class.new(Integration::PostsController)
+    refute_includes klass.action_methods, "later"
+    klass.class_eval { def later; end }
+
+    assert_includes klass.action_methods, "later"
+    refute_includes klass.action_methods, "verify_authorized"
+  end
+
+  def test_api_controllers_hide_the_helpers_too
+    refute_includes Integration::Api::PostsController.action_methods, "skip_authorization"
+    assert_includes Integration::Api::PostsController.action_methods, "index"
   end
 
   # verify_authorized as after_action

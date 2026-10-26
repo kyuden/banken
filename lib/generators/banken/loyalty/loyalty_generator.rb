@@ -6,7 +6,7 @@ module Banken
       source_root File.expand_path(File.join(File.dirname(__FILE__), 'templates'))
 
       def create_loyalty
-        template 'loyalty.rb', File.join('app/loyalties', class_path, "#{file_name}_loyalty.rb")
+        template 'loyalty.rb.tt', File.join('app/loyalties', class_path, "#{file_name}_loyalty.rb")
       end
     end
   end

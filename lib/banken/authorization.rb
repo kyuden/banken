@@ -22,19 +22,41 @@ module Banken
       end
     end
 
+    # Rails treats every public instance method of a non-abstract controller
+    # as a routable action. Keep Banken's helpers out of that set, so a
+    # wildcard route such as `get "posts/:action"` cannot dispatch to
+    # `skip_authorization` or `verify_authorized`.
+    class_methods do
+      def action_methods
+        @_banken_action_methods ||= super - Banken::Authorization::HIDDEN_ACTIONS
+      end
+
+      def clear_action_methods!
+        @_banken_action_methods = nil
+        super
+      end
+    end
+
     def authorize!(record=nil)
       @_banken_authorization_performed = true
 
       loyalty = loyalty(record)
-      unless loyalty.public_send(banken_query_name)
-        raise Banken::NotAuthorizedError.new(controller: banken_controller_name, query: banken_query_name, loyalty: loyalty)
+      query   = banken_query_name
+
+      unless banken_query(loyalty, query)
+        raise Banken::NotAuthorizedError.new(controller: banken_controller_name, query: query, loyalty: loyalty)
       end
 
       true
     end
 
     def permitted_attributes(record)
-      banken_params_for(record).permit(loyalty(record).permitted_attributes)
+      attributes = banken_params_for(record)
+      unless attributes.respond_to?(:permit)
+        # A scalar or an array where a hash of attributes was expected.
+        raise ActionController::ParameterMissing, banken_param_key(record)
+      end
+      attributes.permit(loyalty(record).permitted_attributes)
     end
 
     def loyalty(record=nil, controller_name=nil)
@@ -51,7 +73,10 @@ module Banken
     end
 
     def verify_authorized
-      raise Banken::AuthorizationNotPerformedError unless banken_authorization_performed?
+      return if banken_authorization_performed?
+
+      where = [self.class.name, banken_action_name.presence].compact.join("#")
+      raise Banken::AuthorizationNotPerformedError, "#{where} did not call authorize! or skip_authorization"
     end
 
     def banken_authorization_performed?
@@ -64,25 +89,75 @@ module Banken
       banken_authorization_performed?
     end
 
+    # The public helpers above, by name. Computed here so that it always
+    # matches what the module actually defines.
+    HIDDEN_ACTIONS = public_instance_methods(false).map(&:to_s).sort.freeze
+
     private
 
       # Rails sets action_name and controller_path on every controller and, unlike
       # params[:controller] / params[:action], they cannot be supplied by the
-      # request: for routes that target an endpoint directly
-      # (`get "/x" => PostsController.action(:destroy)`, `mount`) the path
-      # parameters carry no controller or action, so params would come from the
-      # query string. They are also available where params are not, such as a
-      # controller dispatched with Controller.action(...).call(env) and views
-      # rendered through ActionController::Renderer (controller_path only; there
-      # is no action there). params remain the fallback for non-Rails hosts that
-      # only provide params, for action_name being nil before #process runs, and
-      # for anonymous controllers whose controller_path is nil.
+      # request. On a Rails controller only those are consulted: for routes that
+      # target an endpoint directly (`get "/x" => PostsController.action(:destroy)`,
+      # `mount`) and for anonymous controllers the path parameters carry no
+      # controller or action, and reading params there would let the query
+      # string choose the loyalty. params are the source only for hosts that do
+      # not provide action_name / controller_path at all (plain Ruby objects).
       def banken_action_name
-        (respond_to?(:action_name) && action_name.presence) || params[:action]
+        if respond_to?(:action_name)
+          action_name.presence
+        else
+          params[:action]
+        end
       end
 
       def banken_controller_name
-        (respond_to?(:controller_path) && controller_path.presence) || params[:controller]
+        if respond_to?(:controller_path)
+          controller_path.presence || raise(Banken::NotDefinedError, "#{self.class} has no controller_path (anonymous controller?); pass the controller name to loyalty explicitly")
+        else
+          params[:controller]
+        end
+      end
+
+      # Calls the query on the loyalty. A query must be defined by the loyalty
+      # itself (or a module/superclass of it below Object): ActiveSupport
+      # defines `present?` and `duplicable?` on every object and both return
+      # true, so an action named `present` would otherwise authorize everyone.
+      # Queries answered through method_missing keep working. A missing or
+      # private query raises QueryNotDefinedError instead of NoMethodError.
+      def banken_query(loyalty, query)
+        owner = banken_query_owner(loyalty, query)
+        if owner && Object <= owner
+          raise Banken::QueryNotDefinedError, "#{loyalty.class}##{query} is not defined by the loyalty (inherited from #{owner})"
+        end
+
+        loyalty.public_send(query)
+      rescue NoMethodError => e
+        # Only the NoMethodError for this very query on this very loyalty is
+        # converted; anything raised inside the query body propagates unchanged.
+        raise unless e.name.to_s == query.to_s && banken_error_receiver(e).equal?(loyalty)
+
+        if loyalty.respond_to?(query, true)
+          raise Banken::QueryNotDefinedError, "#{loyalty.class}##{query} is private; queries must be public methods"
+        end
+        raise Banken::QueryNotDefinedError, "#{loyalty.class}##{query} is not defined"
+      end
+
+      # The module that defines the query, or nil when it is not a statically
+      # defined method (method_missing, or a loyalty overriding respond_to?).
+      # Kernel#method is called unbound so a loyalty defining its own `method`
+      # cannot interfere.
+      def banken_query_owner(loyalty, query)
+        ::Kernel.instance_method(:method).bind_call(loyalty, query).owner
+      rescue NameError, TypeError
+        nil
+      end
+
+      # NameError#receiver raises ArgumentError for errors built without one.
+      def banken_error_receiver(error)
+        error.receiver
+      rescue ArgumentError
+        nil
       end
 
       # Resolving a loyalty class means camelizing and constantizing the controller
@@ -97,15 +172,20 @@ module Banken
       end
 
       # The parameters that hold the attributes of `record`, before filtering.
-      # Override (keep it private) to read them from somewhere else.
+      # Override (keep it private) to read them from somewhere else; return an
+      # ActionController::Parameters.
       def banken_params_for(record)
         params.require(banken_param_key(record))
       end
 
-      # The params key for `record`, which may be an instance or a class:
-      # Post / Post.new -> "post", Admin::Post -> "post". Override (keep it
-      # private) to use e.g. `record.model_name.param_key` ("admin_post").
+      # The params key for `record`, which may be an instance, a class or a
+      # Symbol: Post / Post.new -> "post", Admin::Post -> "post", :post -> "post".
+      # Override (keep it private) to use e.g. `record.model_name.param_key`
+      # ("admin_post").
       def banken_param_key(record)
+        return record.to_s if record.is_a?(Symbol)
+        raise ArgumentError, "cannot infer a params key for nil; pass a record, a class or a Symbol" if record.nil?
+
         klass = record.is_a?(Class) ? record : record.class
         name  = klass.name || raise(ArgumentError, "cannot infer a params key for an anonymous class")
         name.demodulize.underscore

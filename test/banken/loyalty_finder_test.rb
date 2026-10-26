@@ -42,7 +42,16 @@ class LoyaltyFinderTest < Minitest::Test
   def test_nil_controller_name_is_treated_as_missing_rather_than_crashing
     error = assert_raises(Banken::NotDefinedError) { Banken::LoyaltyFinder.new(nil).loyalty! }
 
-    refute_includes error.message, "_loyalty.rb", "no file hint can be given without a controller name"
+    assert_equal "unable to find a loyalty: no controller name was given", error.message
+  end
+
+  def test_empty_controller_name_never_resolves_a_top_level_loyalty_constant
+    Object.const_set(:Loyalty, Class.new(ApplicationLoyalty))
+
+    assert_nil Banken::LoyaltyFinder.new("").loyalty
+    assert_nil Banken::LoyaltyFinder.new(nil).loyalty
+  ensure
+    Object.send(:remove_const, :Loyalty) if Object.const_defined?(:Loyalty, false)
   end
 
   def test_does_not_resolve_classes_without_the_loyalty_suffix

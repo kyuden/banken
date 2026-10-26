@@ -6,15 +6,18 @@ module Banken
   class NotAuthorizedError < Error
     attr_reader :controller, :query, :loyalty
 
+    # Accepts either a message (`raise Banken::NotAuthorizedError, "must be
+    # logged in"`) or an options hash with :controller, :query, :loyalty and
+    # an optional :message.
     def initialize(options={})
-      if options.is_a? String
-        message = options
-      else
+      if options.is_a?(Hash)
         @controller = options[:controller]
         @query      = options[:query]
         @loyalty    = options[:loyalty]
 
         message = options.fetch(:message) { default_message }
+      else
+        message = options
       end
 
       super(message)
@@ -32,7 +35,14 @@ module Banken
       end
   end
 
+  # The loyalty class (or the controller name needed to find it) is missing.
   class NotDefinedError < Error; end
+
+  # The loyalty exists but does not define the query (or inherits it from
+  # Object, or keeps it private). A subclass of NotDefinedError so existing
+  # rescues keep working while the two cases stay distinguishable.
+  class QueryNotDefinedError < NotDefinedError; end
+
   class AuthorizationNotPerformedError < Error; end
 
   # Unused: Banken has no scope feature. Kept for compatibility, removed in 2.0.

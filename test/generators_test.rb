@@ -22,7 +22,7 @@ class GeneratorsTest < Minitest::Test
   def test_install_generator_creates_application_loyalty_from_the_template
     generate(Banken::Generators::InstallGenerator, [])
 
-    assert_equal File.read("#{TEMPLATE_DIR}/install/templates/application_loyalty.rb"),
+    assert_equal File.read("#{TEMPLATE_DIR}/install/templates/application_loyalty.rb.tt"),
                  File.read("#{@tmpdir}/app/loyalties/application_loyalty.rb")
   end
 
@@ -59,7 +59,7 @@ class GeneratorsTest < Minitest::Test
   end
 
   def test_test_support_application_loyalty_stays_in_sync_with_the_template
-    assert_equal File.read("#{TEMPLATE_DIR}/install/templates/application_loyalty.rb"),
+    assert_equal File.read("#{TEMPLATE_DIR}/install/templates/application_loyalty.rb.tt"),
                  File.read(File.expand_path("support/loyalties/application_loyalty.rb", __dir__))
   end
 

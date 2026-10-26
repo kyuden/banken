@@ -78,17 +78,16 @@ class ControllerHelpersTest < Minitest::Test
     assert_equal 'posts', error.controller
   end
 
-  def test_inference_falls_back_to_params_when_action_name_is_nil
-    # ActionController::Metal#action_name is nil until #process runs.
+  def test_inference_on_a_rails_host_never_reads_params_when_action_name_is_nil
+    # ActionController::Metal#action_name is nil until #process runs; params
+    # must not substitute for it (they could come from the query string).
     unprocessed = Class.new(PostsController) do
       def action_name; nil; end
-      def controller_path; nil; end
+      def controller_path; "posts"; end
     end
-    controller = unprocessed.new(@user, { action: 'destroy', controller: 'posts' })
+    controller = unprocessed.new(@user, { action: "destroy", controller: "posts" })
 
-    error = assert_raises(Banken::NotAuthorizedError) { controller.authorize!(@post) }
-    assert_equal 'destroy?', error.query
-    assert_equal 'posts', error.controller
+    assert_raises(Banken::Error) { controller.authorize!(@post) }
   end
 
   def test_loyalty_class_is_resolved_fresh_for_each_controller_instance

@@ -1,5 +1,36 @@
 ## Unreleased
 
+* Security: `authorize!` only consults queries defined by the loyalty itself (or a module or superclass
+  below `Object`). ActiveSupport defines `present?` and `duplicable?` on every object and both return
+  `true`, so an action named `present` or `duplicable` passed `authorize!` with a loyalty that defined
+  nothing. Such queries, undefined queries and private queries now raise `Banken::QueryNotDefinedError`
+  (a subclass of `NotDefinedError`; undefined queries used to raise `NoMethodError`, so code rescuing or
+  asserting `NoMethodError` there must change). Queries answered through `method_missing` keep working.
+* Security: on a Rails controller, `params[:controller]` / `params[:action]` are never consulted any
+  more. Anonymous controllers (`controller_path` nil) used to fall back to `params[:controller]`,
+  which comes from the query string there, letting a request choose the loyalty. They now raise
+  `NotDefinedError`; pass the controller name to `loyalty` explicitly.
+* `permitted_attributes` raises `ActionController::ParameterMissing` (400) when the params value is a
+  scalar or an array instead of failing with `NoMethodError` (500).
+* README: `after_action :verify_authorized` without `except: :index` (Banken has no scopes); the
+  `UserContext` example returns nil for anonymous requests so a "must be logged in" guard still works;
+  notes that queries must return booleans and that `permitted_attributes` uses the current controller's
+  loyalty; never pass request data as the controller name to `loyalty`.
+* Banken's helpers (`authorize!`, `loyalty`, `skip_authorization`, `verify_authorized`, `banken_user`,
+  `permitted_attributes`, `banken_authorization_performed?`, `banken_loyalty_authorized?`) are excluded
+  from the controller's `action_methods`, so routes with a dynamic `:action` segment can no longer
+  dispatch to them. A controller action that happens to carry one of these names is no longer routable
+  either (such a controller could not have used Banken anyway). Same as Pundit #269 / #357.
+* `verify_authorized` now says which controller and action forgot to authorize
+  (`PostsController#update did not call authorize! or skip_authorization`).
+* `permitted_attributes` accepts a Symbol as the record (`permitted_attributes(:post)` reads
+  `params[:post]`); `nil` raises `ArgumentError` instead of reading `params[:nil_class]`.
+* An empty controller name no longer resolves a top-level `Loyalty` constant; `Banken.loyalty!(nil, ...)`
+  raises `NotDefinedError` ("no controller name was given").
+* `Banken::NotAuthorizedError.new` accepts any non-Hash argument as the message (e.g. `nil` or a Symbol)
+  instead of raising `NoMethodError`.
+* Generator templates are shipped as `.rb.tt` files, the Rails convention, so tooling no longer
+  parses the ERB in `loyalty.rb` as Ruby.
 * Added `Banken::Authorization`, the controller mixin. Prefer `include Banken::Authorization` over
   `include Banken`: including the top-level module also makes every constant under `Banken` (`Error`,
   `VERSION`, `LoyaltyFinder`, `Railtie`, ...) resolvable inside the controller, shadowing application
