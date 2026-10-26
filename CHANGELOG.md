@@ -5,8 +5,12 @@ Ruby 3.3 / 3.4 / 4.0 x Rails 7.1 / 7.2 / 8.0 / 8.1.
 
 ### Upgrading from 1.0.x
 
-Things an upgrader may have to act on; details in the sections below. `include Banken` keeps
-working unchanged; `include Banken::Authorization` is the recommended form from now on.
+No breaking changes to the public API: no method, constant or argument was removed or changed
+its signature, `include Banken` keeps working unchanged (`include Banken::Authorization` is the
+recommended form from now on), and an application that upgrades without touching its code keeps
+authorizing the same requests. What follows are behaviour changes, most of them closing security
+gaps or replacing confusing errors with clear ones, that can affect code or tests relying on the
+old behaviour. Details in the sections below.
 
 * The default `Banken::NotAuthorizedError` message changed from
   `not allowed to update? of posts by #<PostsLoyalty ...>` to
