@@ -133,8 +133,9 @@ module Banken
 
         loyalty.public_send(query)
       rescue NoMethodError => e
-        # e.name is a String or a Symbol depending on how the method was called.
-        raise unless e.name.to_s == query.to_s && e.receiver.equal?(loyalty)
+        # Only the NoMethodError for this very query on this very loyalty is
+        # converted; anything raised inside the query body propagates unchanged.
+        raise unless e.name.to_s == query.to_s && banken_error_receiver(e).equal?(loyalty)
 
         if loyalty.respond_to?(query, true)
           raise Banken::QueryNotDefinedError, "#{loyalty.class}##{query} is private; queries must be public methods"
@@ -144,9 +145,18 @@ module Banken
 
       # The module that defines the query, or nil when it is not a statically
       # defined method (method_missing, or a loyalty overriding respond_to?).
+      # Kernel#method is called unbound so a loyalty defining its own `method`
+      # cannot interfere.
       def banken_query_owner(loyalty, query)
-        loyalty.method(query).owner
-      rescue NameError
+        ::Kernel.instance_method(:method).bind_call(loyalty, query).owner
+      rescue NameError, TypeError
+        nil
+      end
+
+      # NameError#receiver raises ArgumentError for errors built without one.
+      def banken_error_receiver(error)
+        error.receiver
+      rescue ArgumentError
         nil
       end
 

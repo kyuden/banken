@@ -131,6 +131,30 @@ class HardeningTest < Minitest::Test
     Object.send(:remove_const, :BrokenPostsLoyalty) if Object.const_defined?(:BrokenPostsLoyalty, false)
   end
 
+  def test_a_hand_built_no_method_error_named_like_the_query_propagates_unchanged
+    Object.const_set(:ManualPostsLoyalty, Class.new(ApplicationLoyalty) do
+      def show?; raise NoMethodError.new("manual", "show?"); end   # no receiver attached
+    end)
+    controller = PostsController.new(@user, { action: 'show', controller: 'manual_posts' })
+    error = assert_raises(NoMethodError) { controller.authorize!(@post) }
+
+    assert_equal "manual", error.message
+  ensure
+    Object.send(:remove_const, :ManualPostsLoyalty) if Object.const_defined?(:ManualPostsLoyalty, false)
+  end
+
+  def test_a_loyalty_defining_its_own_method_method_still_works
+    Object.const_set(:MethodPostsLoyalty, Class.new(ApplicationLoyalty) do
+      def method; "GET"; end
+      def show?; true; end
+    end)
+    controller = PostsController.new(@user, { action: 'show', controller: 'method_posts' })
+
+    assert_equal true, controller.authorize!(@post)
+  ensure
+    Object.send(:remove_const, :MethodPostsLoyalty) if Object.const_defined?(:MethodPostsLoyalty, false)
+  end
+
   # on a Rails controller, params never substitute for action_name / controller_path
 
   def test_rails_hosts_do_not_fall_back_to_params_for_the_controller_name
