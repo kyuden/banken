@@ -339,7 +339,9 @@ If you only need the status code, map the error to 403 and let Rails render it:
 config.action_dispatch.rescue_responses["Banken::NotAuthorizedError"] = :forbidden
 ```
 
-Without either, an unrescued `NotAuthorizedError` is a 500.
+Without either, an unrescued `NotAuthorizedError` is a 500. `rescue_responses`
+matches exact class names, so a mapping for `Banken::NotDefinedError` does not
+cover `Banken::QueryNotDefinedError`; `rescue_from Banken::NotDefinedError` does.
 
 ## Creating custom error messages
 
@@ -399,6 +401,12 @@ class ApplicationController < ActionController::Base
 end
 ```
 
+Define `banken_user` in the controller class itself (or in a module included
+*after* `Banken::Authorization`): a module included before it is shadowed by
+Banken's default, which silently keeps calling `current_user`. The loyalty is
+built fresh with the current `banken_user` on every call, so changing the user
+mid-request needs no reset.
+
 Banken keeps its own helpers (`authorize!`, `loyalty`, `banken_user`,
 `skip_authorization`, `verify_authorized`, `permitted_attributes`, ...) out of
 the controller's `action_methods`, so a wildcard route cannot dispatch to them
@@ -410,7 +418,8 @@ Banken reports its own deprecations through `Banken.deprecator`, an
 `ActiveSupport::Deprecation` instance. When banken is loaded by Bundler in the
 usual way (after `require "rails/all"`), `Banken::Railtie` registers it with
 `Rails.application.deprecators`, so `config.active_support.deprecation` and
-`config.active_support.report_deprecations` apply to Banken as well. If you
+`config.active_support.report_deprecations` apply to Banken as well (with the
+`:notify` behaviour the events are published as `deprecation.banken`). If you
 require banken only after Rails has initialized, register it yourself:
 
 ```ruby
@@ -527,11 +536,17 @@ unless you map it in `rescue_responses`.
 and expects `params[<key>]` to be a hash of attributes; a scalar or array value is
 rejected with `ActionController::ParameterMissing` (400).
 
+The list may contain hash filters for arrays and nested attributes, exactly as
+`permit` accepts them: `[:title, { tags: [] }, { meta: [:key] }]`.
+
 `permitted_attributes` reads `params[<key>]`, where the key is the demodulized,
-underscored class name (`Post` and `Admin::Post` both give `post`). To change
-that, override one of these hooks in your controller. **Define the override
-under `private` (or `protected`)**: a public method on a controller is a
-routable action.
+underscored class name (`Post` and `Admin::Post` both give `post`). Rails forms
+use `model_name.param_key` instead, so a namespaced model (`Admin::Post` is
+posted as `params[:admin_post]`) or a model overriding `model_name` needs the
+`banken_param_key` override below, or every submit ends in
+`ActionController::ParameterMissing`. To change the key, override one of these
+hooks in your controller. **Define the override under `private` (or
+`protected`)**: a public method on a controller is a routable action.
 
 ```ruby
 class ApplicationController < ActionController::Base
