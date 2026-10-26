@@ -31,14 +31,20 @@ Ruby versions follow the official end-of-life schedule; Rails versions that
 reached end-of-life are dropped gradually as applications move on. Environments
 below these floors stay on banken 1.0.3, which works on Rails 7.1 and older.
 
-Include Banken in your application controller (`ActionController::API` works too):
+Include `Banken::Authorization` in your application controller
+(`ActionController::API` works too):
 
 ``` ruby
 # app/controllers/application_controller.rb
 class ApplicationController < ActionController::Base
-  include Banken
+  include Banken::Authorization
 end
 ```
+
+`include Banken` (the pre-1.1 form) still works and will be deprecated in 2.0.
+Avoid it: it also brings every constant under the `Banken` namespace (`Error`,
+`VERSION`, `LoyaltyFinder`, ...) into the controller's constant lookup, where it
+shadows application constants of the same name.
 
 Optionally, you can run the generator, which will set up an application loyalty
 with some useful defaults for you:
@@ -292,7 +298,7 @@ method in every controller.
 ```ruby
 # app/controllers/application_controller.rb
 class ApplicationController < ActionController::Base
-  include Banken
+  include Banken::Authorization
 
   rescue_from Banken::NotAuthorizedError, with: :user_not_authorized
 
@@ -369,7 +375,7 @@ does not become a routable action):
 
 ```ruby
 class ApplicationController < ActionController::Base
-  include Banken
+  include Banken::Authorization
 
   private
     def banken_user
@@ -420,7 +426,7 @@ end
 
 # app/controllers/application_controller.rb
 class ApplicationController < ActionController::Base
-  include Banken
+  include Banken::Authorization
 
   private
     def banken_user
@@ -501,7 +507,7 @@ routable action.
 
 ```ruby
 class ApplicationController < ActionController::Base
-  include Banken
+  include Banken::Authorization
 
   private
     # Use the key Rails forms generate (Admin::Post -> "admin_post");

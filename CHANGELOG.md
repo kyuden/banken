@@ -1,5 +1,10 @@
 ## Unreleased
 
+* Added `Banken::Authorization`, the controller mixin. Prefer `include Banken::Authorization` over
+  `include Banken`: including the top-level module also makes every constant under `Banken` (`Error`,
+  `VERSION`, `LoyaltyFinder`, `Railtie`, ...) resolvable inside the controller, shadowing application
+  constants of the same name. `include Banken` keeps working (it includes `Banken::Authorization`)
+  and will be deprecated in 2.0. Same motivation as Pundit 2.2.0's `Pundit::Authorization`.
 * Documentation: README rewritten for Rails 7.1+ (`update` instead of `update_attributes`, no
   Rails 4 / strong_parameters notes), the `rescue_from` examples use
   `redirect_back_or_to(root_path, allow_other_host: false)` instead of redirecting to the `Referer`
